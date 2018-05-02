@@ -60,7 +60,7 @@
     #define TICK_ID DMTIMER3
     #define TIMER_PERIODIC_MAX_SET true
     /* XXX am I doing this right? this is the largest period in nsec you can pass to the timer APIs */
-    #define TIMER_PERIODIC_MAX 178956970666  // ((((1UL << 32) / 24UL) * 1000UL) - 1) 
+    #define TIMER_PERIODIC_MAX 178956970666  // ((((1UL << 32) / 24UL) * 1000UL) - 1)
     #define TICK_TIMER_PERIOD (2000000)
     #define TICK_TIMER_SCALE_NS 1
 
@@ -78,6 +78,9 @@
 #else
     #error "Unsupported platform."
 #endif
+
+static ltimer_t theDeviceTimer;
+static ltimer_t theTickTimer;
 
 /* ------------------------------------ Timer functions ----------------------------------------- */
 
@@ -143,12 +146,12 @@ device_timer_handle_irq(void *cookie, uint32_t irq)
     assert(s && s->magic == TIMESERV_DEVICE_TIMER_MAGIC);
     assert(s->timerIRQPeriod > 0);
     s->cumulativeTime += s->timerIRQPeriod;
-    timer_handle_irq(s->timerDev, irq);
+    s->timerDev->handle_irq(s->timerDev, NULL);
     device_timer_update_sleepers(s);
 }
 
 /*! @brief Callback function to handle waiter timer IRQs.
-    
+
     Waiter-list IRQs happen very frequently, as opposed to the GPT overflow IRQs. This is used to
     wake up sleeping clients.
 
@@ -160,7 +163,7 @@ device_tick_handle_irq(void *cookie, uint32_t irq)
 {
     struct device_timer_state *s = (struct device_timer_state *) cookie;
     assert(s && s->magic == TIMESERV_DEVICE_TIMER_MAGIC);
-    timer_handle_irq(s->tickDev, irq);
+    s->tickDev->handle_irq(s->tickDev, NULL);
     device_timer_update_sleepers(s);
 }
 
@@ -171,7 +174,7 @@ device_timer_init_rtc(struct device_timer_state *s, dev_io_ops_t *io)
     s->cumulativeTime = 0;
 
     #if defined(PLAT_PC99)
-    
+
     rtc_time_date_t rtcTimeDate;
     int error = rtc_get_time_date_reg(&io->opsIO.io_port_ops, 0, &rtcTimeDate);
     if (error) {
@@ -198,79 +201,26 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
 {
     assert(s && io);
     assert(!s->initialised);
+    size_t irqCnt = 0;
 
     s->magic = TIMESERV_DEVICE_TIMER_MAGIC;
     s->io = io;
-    s->timerDev = NULL;
+    s->timerDev = &theDeviceTimer;
 
-#if defined(PLAT_IMX31) || defined (PLAT_IMX6)
-
-    /* Map the GPT (General Purpose Timer) device to use as the clock. */
-    gpt_config_t config;
-    config.vaddr = ps_io_map(&io->opsIO.io_mapper, TIMER_PADDR, 0x1000,
-                             false, PS_MEM_NORMAL);
-    config.prescaler = 0;
-    if (!config.vaddr) {
-        ROS_ERROR("Could not map timer device.");
-        assert(!"Could not map timer device.");
-        return;
+    ltimer_default_init(&theDeviceTimer, &io->opsIO);
+    irqCnt = theDeviceTimer.get_num_irqs(theDeviceTimer.data);
+    if (irqCnt > 1)
+    {
+        ltimer_default_init(&theTickTimer, &io->opsIO);
+        s->tickDev = &theTickTimer;
+    }
+    else
+    {
+        s->tickDev = &theDeviceTimer;
     }
 
-    /* Get timer interface from given GPT device. */
-    s->timerDev = gpt_get_timer(&config);
-
-    /* Map the EPIT device to use as the tick source. */
-    epit_config_t econfig;
-    econfig.vaddr = ps_io_map(&io->opsIO.io_mapper, TICK_TIMER_PADDR, 0x1000,
-                             false, PS_MEM_NORMAL);
-    econfig.prescaler = 0;
-    econfig.irq = TICK_TIMER_IRQ;
-    if (!econfig.vaddr) {
-        ROS_ERROR("Could not map tick timer device.");
-        assert(!"Could not map tick timer device.");
-        return;
-    }
-
-    /* Get the timer interface from EPIT device. */
-    s->tickDev = epit_get_timer(&econfig);
-
-#elif defined(PLAT_AM335x)
-
-    timer_config_t config;
-    config.vaddr = ps_io_map(&io->opsIO.io_mapper, dm_timer_paddrs[TIMER_ID],
-                             0x1000, false, PS_MEM_NORMAL);
-    config.irq = dm_timer_irqs[TIMER_ID];
-    if (!config.vaddr) {
-        ROS_ERROR("Could not map timer device.");
-        assert(!"Could not map timer device.");
-        return;
-    }
-    s->timerDev = ps_get_timer(TIMER_ID, &config);
-
-    config.vaddr = ps_io_map(&io->opsIO.io_mapper, dm_timer_paddrs[TICK_ID],
-                             0x1000, false, PS_MEM_NORMAL);
-    config.irq = dm_timer_irqs[TICK_ID];
-    if (!config.vaddr) {
-        ROS_ERROR("Could not map tick timer device.");
-        assert(!"Could not map tick timer device.");
-        return;
-    }
-    s->tickDev = ps_get_timer(TICK_ID, &config);
-
-#elif defined(PLAT_PC99)
-
-    s->timerDev = pit_get_timer(&io->opsIO.io_port_ops);
-    s->tickDev = s->timerDev;
-
-#endif
-
-    if (!s->timerDev) {
-        ROS_ERROR("Could not initialise timer.");
-        return;
-    }
-
-    /* Set up to recieve timer IRQs. */
-    for (uint32_t i = 0; i < s->timerDev->properties.irqs; i++) {
+    /* Set up to receive device timer IRQs. */
+    for (uint32_t i = 0; i < irqCnt; i++) {
         int irq = timer_get_nth_irq(s->timerDev, i);
         int error = dev_handle_irq(&timeServ.irqState, irq, device_timer_handle_irq, (void*) s);
         assert(!error);
@@ -278,8 +228,9 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
     }
 
     /* Set up to recieve tick timer IRQs. */
-    if (s->tickDev != NULL && s->tickDev != s->timerDev) {
-        for (uint32_t i = 0; i < s->tickDev->properties.irqs; i++) {
+    if ((s->tickDev != NULL) && (s->tickDev != s->timerDev))
+    {
+        for (uint32_t i = 0; i < irqCnt; i++) {
             int irq = timer_get_nth_irq(s->tickDev, i);
             int error = dev_handle_irq(&timeServ.irqState, irq, device_tick_handle_irq, (void*) s);
             assert(!error);
@@ -307,7 +258,7 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
 
     #if TIMER_PERIODIC_MAX_SET
     /* Set the timer for periodic overflow interrupts. */
-    error = timer_periodic(s->timerDev, TIMER_PERIODIC_MAX);
+    error = s->timerDev->set_timeout(s->timerDev->data, TIMER_PERIODIC_MAX, TIMEOUT_PERIODIC);
     if (error) {
         ROS_ERROR("Could not configure periodic timer.");
         assert(!"Could not set periodic timer.");
@@ -320,8 +271,9 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
        functionality but works. In the future this should be improved
        (see module description above).
     */
-    if (s->tickDev != NULL) {
-        error = timer_periodic(s->tickDev, TICK_TIMER_PERIOD);
+    if ((s->tickDev != NULL) && (s->tickDev != s->timerDev))
+    {
+        error = s->tickDev->set_timeout(s->tickDev->data, TICK_TIMER_PERIOD, TIMEOUT_PERIODIC);
         if (error) {
             ROS_WARNING("Could not set periodic tick timer.");
             assert(!"Could not set periodic tick timer.");
@@ -341,8 +293,9 @@ uint64_t
 device_timer_get_time(struct device_timer_state *s)
 {
     assert(s && s->magic == TIMESERV_DEVICE_TIMER_MAGIC);
-    uint64_t time = timer_get_time(s->timerDev);
-    if (!s->timerDev->properties.upcounter) {
+    uint64_t time;
+    int error = s->timerDev->get_time(s->timerDev->data, &time);
+    if (!s->timerDev->props.upcounter) {
         /* This is a downcounter timer. Invert the time. */
         assert(time <= s->timerIRQPeriod);
         time = s->timerIRQPeriod - time;
@@ -357,13 +310,13 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
 {
     assert(s && s->magic == TIMESERV_DEVICE_TIMER_MAGIC);
     assert(c && c->magic == TIMESERV_CLIENT_MAGIC);
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Allocate and fill out waiter structure. */
     struct device_timer_waiter *waiter = malloc(sizeof(struct device_timer_waiter));
     if (!waiter) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to alloc waiter struct.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     waiter->magic = TIMESERV_DEVICE_TIMER_WAITER_MAGIC;
     waiter->client = c;
@@ -373,7 +326,7 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
     waiter->reply = csalloc();
     if (!waiter->reply) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to alloc cslot.");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit1;
     }
 
@@ -381,14 +334,14 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
     error = seL4_CNode_SaveCaller(REFOS_CSPACE, waiter->reply, REFOS_CDEPTH);
     if (error != seL4_NoError) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to save caller.");
-        error = EINVALID;
+        error = REFOS_EINVALID;
         goto exit2;
     }
 
     /* Add to waiter list. (Takes ownership) */
     cvector_add(&s->waiterList, (cvector_item_t) waiter);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:

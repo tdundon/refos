@@ -43,11 +43,11 @@ struct device_timer_state {
     bool initialised;
 
     /*! This should point to a timer device. */
-    pstimer_t *timerDev; /* No ownership. Weak ref to static. */
+    ltimer_t *timerDev; /* No ownership. Weak ref to static. */
 
     /*! This should point to a timer device that is capable of generating periodic interrupts.
         Note that this may point to the exact same device as timerDev. */
-    pstimer_t *tickDev; /* No ownership. Weak ref to static. */
+    ltimer_t *tickDev; /* No ownership. Weak ref to static. */
 
     cvector_t waiterList; /* struct device_timer_waiter */
     uint64_t cumulativeTime; /*!< Current cumulative time. */
