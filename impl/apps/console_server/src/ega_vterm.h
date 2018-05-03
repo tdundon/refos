@@ -42,7 +42,7 @@ typedef struct vterm_state {
     int height;
     int width;
     volatile uint16_t *buffer; /* No ownership */
-    
+
     int fgColour;
     int bgColour;
 } vterm_state_t;
@@ -80,7 +80,7 @@ enum vterm_colors {
     @param height Height of the screen buffer.
     @param buffer Address of the screen buffer. May be an in-memory buffer, or may be the actual
                   mapped device frame buffer. (No ownership)
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
 */
 int vterm_init(vterm_state_t *s, int width, int height, volatile uint16_t *buffer);
 

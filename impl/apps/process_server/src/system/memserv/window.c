@@ -46,7 +46,7 @@ window_switch_mode(struct w_window* window, enum w_window_mode mode)
     if (window->pager.capPtr) {
         vka_cnode_revoke(&window->pager);
         vka_cnode_delete(&window->pager);
-        vka_cspace_free(&procServ.vka, window->pager.capPtr);   
+        vka_cspace_free(&procServ.vka, window->pager.capPtr);
         window->pager.capPtr = 0;
         window->pagerPID = PID_NULL;
     }
@@ -73,10 +73,10 @@ window_switch_mode(struct w_window* window, enum w_window_mode mode)
 }
 
 /*! @brief Window OAT creation callback function.
-    
+
     This callback function is called by the OAT allocation helper library in <data_struct/coat.h>,
     in order to create window objects.
-*/    
+*/
 static cvector_item_t
 window_oat_create(coat_t *oat, int id, uint32_t arg[COAT_ARGS])
 {
@@ -103,10 +103,10 @@ window_oat_create(coat_t *oat, int id, uint32_t arg[COAT_ARGS])
 }
 
 /*! @brief Window OAT deletion callback function.
-    
+
     This callback function is called by the OAT allocation helper library in <data_struct/coat.h>,
     in order to delete window objects previously created by window_oat_create().
-*/  
+*/
 static void
 window_oat_delete(coat_t *oat, cvector_item_t *obj)
 {
@@ -192,7 +192,7 @@ int
 w_delete_window(struct w_list *wlist, int windowID)
 {
     coat_free(&wlist->windows, windowID);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 struct w_window*
@@ -247,7 +247,7 @@ w_purge_dspace(struct w_list *wlist, struct ram_dspace *dspace)
         struct w_window *window = w_get_window(wlist, i);
 
         if (window && window->ramDataspace) {
-            if (window->ramDataspace == dspace || (window->ramDataspace->parentList == 
+            if (window->ramDataspace == dspace || (window->ramDataspace->parentList ==
                     dspace->parentList && window->ramDataspace->ID == dspace->ID)) {
                 /* Set it back to empty. Not that this will unmap the window. */
                 window_switch_mode(window, W_MODE_EMPTY);
@@ -262,18 +262,18 @@ w_resize_window(struct w_window *window, vaddr_t vaddr, vaddr_t size)
     assert(window && window->magic == W_MAGIC);
     if (size == window->size) {
         /* Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     int error = sel4utils_move_resize_reservation(window->vspace, window->reservation,
             (void*) vaddr, size);
     if (error) {
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     dvprintf("window ID %d resized from size 0x%x to 0x%x\n", window->wID, window->size, size);
     window->size = size;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /* -------------------------------- Window Association functions -------------------------------- */
@@ -314,7 +314,7 @@ w_associate_reserve(struct w_associated_windowlist *aw, int num) {
         return;
     }
     aw->associatedVectorSize = (aw->associatedVectorSize * 2) + 1;
-    aw->associated = krealloc(aw->associated, 
+    aw->associated = krealloc(aw->associated,
             sizeof(struct w_associated_window) * aw->associatedVectorSize);
     assert(aw->associated);
 }
@@ -333,7 +333,7 @@ w_associate(struct w_associated_windowlist *aw, int winID, vaddr_t offset, vaddr
     assert(winID != W_INVALID_WINID);
     assert(winID > 0 && winID < W_MAX_WINDOWS);
     if (aw->numIndex >= W_MAX_ASSOCIATED_WINDOWS) {
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     w_associate_reserve(aw, aw->numIndex + 1    );
     aw->associated[aw->numIndex].winID = winID;
@@ -341,7 +341,7 @@ w_associate(struct w_associated_windowlist *aw, int winID, vaddr_t offset, vaddr
     aw->associated[aw->numIndex].size = size;
     aw->numIndex++;
     aw->updated = 0;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void
@@ -475,7 +475,7 @@ w_associate_check(struct w_associated_windowlist *aw, vaddr_t offset, vaddr_t si
 {
     /* Search for both the start vaddress and end vaddress. If either of them are valid,
        then this window is invalid. Otherwise if the searched index are the same, then this
-       means there was not a window in between offset and size. 
+       means there was not a window in between offset and size.
     */
     int findResult1 = w_associate_find_index(aw, offset);
     if (findResult1 >= 0) {

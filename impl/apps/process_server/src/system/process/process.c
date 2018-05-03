@@ -40,21 +40,21 @@ proc_staticparam_create_and_set(struct proc_pcb *p, char *param)
     size_t paramLen = strlen(param);
     assert(paramLen <= PROCESS_STATICPARAM_SIZE && paramLen <= REFOS_PAGE_SIZE);
     struct vs_vspace *vs = &p->vspace;
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Allocate the frame to map. */
     vka_object_t frame;
     error = vka_alloc_frame(&procServ.vka, seL4_PageBits, &frame);
-    if (error != ESUCCESS || !frame.cptr) {
+    if (error != REFOS_ESUCCESS || !frame.cptr) {
         ROS_ERROR("Could not allocate frame kobj. Procserv out of memory.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Write param data to frame. */
     error = procserv_frame_write(frame.cptr, param, paramLen, 0);
     if (error) {
         ROS_ERROR("Could not write to param frame.");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit0;
     }
 
@@ -74,7 +74,7 @@ proc_staticparam_create_and_set(struct proc_pcb *p, char *param)
         goto exit1;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit1:
@@ -189,10 +189,10 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
 {
     assert(p);
     if (!imageName) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     memset(p, 0, sizeof(struct proc_pcb));
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Set initial info. */
     p->magic = REFOS_PCB_MAGIC;
@@ -204,7 +204,7 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
     /* Allocate a vspace. */
     dvprintf("Initialising vspace for %s...\n", imageName);
     error = vs_initialise(&p->vspace, pid);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         dprintf("Failed vspace allocation.\n");
         goto exit0;
     }
@@ -215,7 +215,7 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
     struct proc_tcb *thread = kmalloc(sizeof(struct proc_tcb));
     if (!thread) {
         ROS_ERROR("Failed to malloc thread structure.\n");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit1;
     }
 
@@ -227,7 +227,7 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
     );
     if (entryPoint == NULL) {
         ROS_ERROR("Failed to load ELF file %s.", imageName);
-        error = EINVALIDPARAM;
+        error = REFOS_EINVALIDPARAM;
         goto exit2;
     }
 
@@ -276,7 +276,7 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
     client_watch_init(&p->clientWatchList);
     strcpy(p->debugProcessName, imageName);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:
@@ -308,7 +308,7 @@ proc_load_direct(char *name, int priority, char *param, unsigned int parentPID,
     uint32_t npid = pid_alloc(&procServ.PIDList);
     if (npid == PID_NULL) {
         dprintf("Failed PID allocation.\n");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     dprintf("Allocated PID %d!...\n", npid);
     struct proc_pcb *pcb = pid_get_pcb(&procServ.PIDList, npid);
@@ -317,7 +317,7 @@ proc_load_direct(char *name, int priority, char *param, unsigned int parentPID,
     /* Configure the process. */
     dprintf("Configuring process for PID %d!...\n", npid);
     int error = proc_config_new(pcb, npid, priority, name, systemCapabilitiesMask);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         pid_free(&procServ.PIDList, npid);
         return error;
     }
@@ -341,7 +341,7 @@ proc_load_direct(char *name, int priority, char *param, unsigned int parentPID,
         return error;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -351,16 +351,16 @@ proc_nice(struct proc_pcb *p, int tindex, int priority)
     struct proc_tcb *t = (struct proc_tcb *) cvector_get(&p->threads, tindex);
     if (!t) {
         ROS_WARNING("proc_nice warning: no such thread %d!", tindex);
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     assert(thread_tcb_obj(t));
     int error = seL4_TCB_SetPriority(thread_tcb_obj(t), priority);
     if (error) {
         ROS_ERROR("proc_nice failed to set TCB priority.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     t->priority = priority;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 static void proc_parent_reply(struct proc_pcb *p);
@@ -466,14 +466,14 @@ proc_set_notificationbuffer(struct proc_pcb *p, struct ram_dspace *notifBuffer)
         p->notificationBuffer = NULL;
     }
     if (!notifBuffer) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
     p->notificationBuffer = rb_create(notifBuffer, RB_WRITEONLY);
     if (!p->notificationBuffer) {
         ROS_ERROR("Could not create notification buffer");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void
@@ -532,7 +532,7 @@ proc_save_caller(struct proc_pcb *p)
     int error = vka_cspace_alloc_path(&procServ.vka, &p->faultReply);
     if (error != seL4_NoError) {
         ROS_ERROR("Could not allocate path to save caller. PRocserv outof cslots.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     assert(p->faultReply.capPtr);
 
@@ -540,10 +540,10 @@ proc_save_caller(struct proc_pcb *p)
     error = vka_cnode_saveCaller(&p->faultReply);
     if (error != seL4_NoError) {
         ROS_ERROR("Could not copy out reply cap.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -556,14 +556,14 @@ proc_clone(struct proc_pcb *p, int *threadID, vaddr_t stackAddr, vaddr_t entryPo
 
     /* No support for fork() behaviour. */
     if (!stackAddr || !entryPoint) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Get the main thread of process to read its priority. */
     struct proc_tcb * t = proc_get_thread(p, 0);
     if (!t) {
         ROS_ERROR("Failed to retrieve main thread.\n");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Create the TCB struct for the clone thread. */
@@ -571,7 +571,7 @@ proc_clone(struct proc_pcb *p, int *threadID, vaddr_t stackAddr, vaddr_t entryPo
     struct proc_tcb *thread = kmalloc(sizeof(struct proc_tcb));
     if (!thread) {
         ROS_ERROR("Failed to malloc thread structure.\n");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Configure new thread, sharing the process's address space */
@@ -623,7 +623,7 @@ proc_clone(struct proc_pcb *p, int *threadID, vaddr_t stackAddr, vaddr_t entryPo
         goto exit2;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:
@@ -631,7 +631,7 @@ exit2:
     thread_release(thread);
 exit1:
     kfree(thread);
-    assert(error != ESUCCESS);
+    assert(error != REFOS_ESUCCESS);
     return error;
 }
 

@@ -129,7 +129,7 @@ test_process_server_ping(void)
     test_start("process server ping");
     for (int i = 0; i < 8; i++) {
         int error = proc_ping();
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
     }
     return test_success();
 }
@@ -140,10 +140,10 @@ test_process_server_endpoints(void)
     test_start("process server endpoints");
 
     seL4_CPtr ep = proc_new_endpoint();
-    test_assert(ep && ROS_ERRNO() == ESUCCESS);
+    test_assert(ep && ROS_ERRNO() == REFOS_ESUCCESS);
 
     seL4_CPtr aep = proc_new_async_endpoint();
-    test_assert(aep && ROS_ERRNO() == ESUCCESS);
+    test_assert(aep && ROS_ERRNO() == REFOS_ESUCCESS);
 
     seL4_MessageInfo_t tag = seL4_MessageInfo_new(0, 0, 0, 1);
     seL4_SetMR(0, 0x31336);
@@ -170,7 +170,7 @@ test_process_server_window(void)
     /* Create invalid window in kernel memory. */
     seL4_CPtr invalidKernelMemWindow = proc_create_mem_window(
             TEST_KERNEL_VM_RESERVED_START + 100, 0x1000);
-    test_assert(invalidKernelMemWindow == 0 && ROS_ERRNO() == EINVALIDPARAM);
+    test_assert(invalidKernelMemWindow == 0 && ROS_ERRNO() == REFOS_EINVALIDPARAM);
 
     /* Create valid test windows. */
     int windowBases[] = {0x2000, 0x4000, 0x6000, 0x8000, 0x10000};
@@ -178,28 +178,29 @@ test_process_server_window(void)
     int nWindows = 5;
     for (int i = 0; i < nWindows; i++) {
         validWindows[i] = proc_create_mem_window(testBase + windowBases[i], 10);
-        test_assert(validWindows[i] != 0 && ROS_ERRNO() == ESUCCESS);
+        test_assert(validWindows[i] != 0 && ROS_ERRNO() == REFOS_ESUCCESS);
     }
 
     int testWin[] = {0x2000, 1, 0x4001, 20, 0x7000, 10, 0x6002, 50, 0, 0x9FFF};
-    int expectedResult[] = {EINVALIDWINDOW, EINVALIDWINDOW, ESUCCESS, EINVALIDWINDOW, EINVALIDWINDOW};
+    int expectedResult[] = {REFOS_EINVALIDWINDOW, REFOS_EINVALIDWINDOW, REFOS_ESUCCESS,
+                            REFOS_EINVALIDWINDOW, REFOS_EINVALIDWINDOW};
     int numTestWin = 5;
     for (int i = 0; i < numTestWin; i++) {
         seL4_CPtr testWindow = proc_create_mem_window(testBase + testWin[i*2], testWin[i*2+1]);
         test_assert(ROS_ERRNO() == expectedResult[i]);
-        if (expectedResult[i] == ESUCCESS) {
+        if (expectedResult[i] == REFOS_ESUCCESS) {
             test_assert(testWindow);
         }
         if (testWindow) {
             int error = proc_delete_mem_window(testWindow);
-            test_assert(error == ESUCCESS);
+            test_assert(error == REFOS_ESUCCESS);
         }
     }
 
     for (int i = 0; i < nWindows; i++) {
         if (validWindows[i]) {
             int error = proc_delete_mem_window(validWindows[i]);
-            test_assert(error == ESUCCESS);
+            test_assert(error == REFOS_ESUCCESS);
         }
     }
 
@@ -214,38 +215,38 @@ test_process_server_window_resize(void)
 
     /* Test window resize. */
     seL4_CPtr testRWindow = proc_create_mem_window(testBase + 0x1000, 0x2000);
-    test_assert(testRWindow && ROS_ERRNO() == ESUCCESS);
+    test_assert(testRWindow && ROS_ERRNO() == REFOS_ESUCCESS);
 
     seL4_CPtr testCheckWindow = proc_create_mem_window(testBase + 0x3000, 0x1000);
-    test_assert(testCheckWindow && ROS_ERRNO() == ESUCCESS);
+    test_assert(testCheckWindow && ROS_ERRNO() == REFOS_ESUCCESS);
 
     /* Resizing the latter window should succeed. */
     int error = proc_resize_mem_window(testCheckWindow, 0x2000);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     /* Increasing the previous window should cause overlap error. */
     error = proc_resize_mem_window(testRWindow, 0x2100);
-    test_assert(error == EINVALIDPARAM);
+    test_assert(error == REFOS_EINVALIDPARAM);
     /* Zero size not allowed. */
     error = proc_resize_mem_window(testRWindow, 0);
-    test_assert(error == EINVALIDPARAM);
+    test_assert(error == REFOS_EINVALIDPARAM);
     /* Shrinking window is OK. */
     error = proc_resize_mem_window(testRWindow, 0x1900);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     /* Invalid window. */
     error = proc_resize_mem_window(0x0, 0x2100);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
 
 
     /* Delete the latter window. */
     error = proc_delete_mem_window(testCheckWindow);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* Increasing the previous window should now succeed, as the latter window causing the overlap
        is now gone. */
     error = proc_resize_mem_window(testRWindow, 0x2100);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     error = proc_delete_mem_window(testRWindow);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     return test_success();
 }
@@ -257,10 +258,10 @@ test_process_server_param_buffer(void)
     int error;
     seL4_CPtr ds = data_open(REFOS_PROCSERV_EP, "anon",
             0x0, 0x0, PROCESS_PARAM_DEFAULTSIZE, &error);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(ds);
     error = proc_set_parambuffer(ds, PROCESS_PARAM_DEFAULTSIZE);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     return test_success();
 }
 
@@ -275,21 +276,21 @@ test_process_server_nameserv(void)
 
     /* Should not find this server. */
     mp = nsv_resolve(testServerPath);
-    test_assert(ROS_ERRNO() == ESERVERNOTFOUND);
+    test_assert(ROS_ERRNO() == REFOS_ESERVERNOTFOUND);
     test_assert(mp.success == false);
     test_assert(mp.serverAnon == 0);
 
     /* Make a quick anon cap. */
     seL4_CPtr aep = proc_new_async_endpoint();
-    test_assert(aep && ROS_ERRNO() == ESUCCESS);
+    test_assert(aep && ROS_ERRNO() == REFOS_ESUCCESS);
 
     /* We register ourselves now under this server name. */
     error = nsv_register(REFOS_NAMESERV_EP, testServerName, aep);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* We should find ourself now. */
     mp = nsv_resolve(testServerPath);
-    test_assert(ROS_ERRNO() == ESUCCESS);
+    test_assert(ROS_ERRNO() == REFOS_ESUCCESS);
     test_assert(mp.success == true);
     test_assert(mp.serverAnon != 0);
     test_assert(strcmp(mp.dspaceName, "foo.txt") == 0);
@@ -312,11 +313,11 @@ test_process_server_nameserv(void)
 
     /* We now unregister ourselves. */
     error = nsv_unregister(REFOS_NAMESERV_EP, testServerName);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* We should not be able to find this server again. */
     mp = nsv_resolve(testServerPath);
-    test_assert(ROS_ERRNO() == ESERVERNOTFOUND);
+    test_assert(ROS_ERRNO() == REFOS_ESERVERNOTFOUND);
     test_assert(mp.success == false);
     test_assert(mp.serverAnon == 0);
 
@@ -328,13 +329,13 @@ static int
 test_start_userland_test(void)
 {
     tprintf("TEST_OS | Starting RefOS userland environment unit tests...\n");
-    int status = EINVALID;
+    int status = REFOS_EINVALID;
     int error;
     (void) error;
 
     /* Start the application */
     error = proc_new_proc(TEST_USERLAND_TEST_APP, "", true, 70, &status);
-    assert(error == ESUCCESS);
+    assert(error == REFOS_ESUCCESS);
     assert(status == 0x1234);
     return 0;
 }

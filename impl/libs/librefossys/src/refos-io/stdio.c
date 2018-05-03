@@ -53,7 +53,9 @@ refos_setup_dataspace_stdio(char *dspacePath)
 #else
     /* Find the path and connect to it. */
     refosIOState.stdioSession = serv_connect_no_pbuffer(dspacePath);
-    if (!refosIOState.stdioSession.error == ESUCCESS || !refosIOState.stdioSession.serverSession) {
+    if (!refosIOState.stdioSession.error == REFOS_ESUCCESS ||
+        !refosIOState.stdioSession.serverSession)
+    {
         seL4_DebugPrintf("Failed to connect to [%s]. Error: %d %s.\n", dspacePath,
                 refosIOState.stdioSession.error, refos_error_str(refosIOState.stdioSession.error));
         #if defined(SEL4_DEBUG_KERNEL)

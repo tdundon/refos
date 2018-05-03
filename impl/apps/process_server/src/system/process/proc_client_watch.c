@@ -88,14 +88,14 @@ int
 client_watch(struct proc_watch_list *wl, uint32_t pid, seL4_CPtr notifyEP)
 {
     if (!notifyEP) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Allocate cspacepath_t structure. */
     cspacepath_t *cslot = kmalloc(sizeof(cspacepath_t));
     if (!cslot) {
         ROS_ERROR("client_watch failed to malloc cslot structure. Procserv out of memory.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     memset(cslot, 0, sizeof(cspacepath_t));
 
@@ -114,7 +114,7 @@ client_watch(struct proc_watch_list *wl, uint32_t pid, seL4_CPtr notifyEP)
     cvector_add(&wl->endpointNotifyList, (cvector_item_t) cslot);
     assert(cvector_count(&wl->clientList) == cvector_count(&wl->endpointNotifyList));
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void

@@ -14,10 +14,10 @@
 
 <interface label_min='PROCSERV_METHODS_BASE' connect_ep='REFOS_PROCSERV_EP'>
     <include>refos/refos.h</include>
- 
+
     <function name="proc_ping" return='refos_err_t'>
         ! @brief Ping the process server. Useful for debugging.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
     </function>
 
     <function name="proc_new_endpoint_internal" return='seL4_CPtr'>
@@ -31,7 +31,7 @@
 
         <param type="refos_err_t*" name="errno" dir="out"/>
     </function>
-    
+
     <function name="proc_new_async_endpoint_internal" return='seL4_CPtr'>
         ! @brief Create a new asynchronous endpoint.
 
@@ -49,19 +49,19 @@
         @param liveness The liveliness cap of the client.
         @param deathEP The endpoint through which death notification will happen.
         @param deathID The deathID which will be passed in the notification.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="liveness"/>
         <param type="seL4_CPtr" name="deathEP"/>
         <param type="int32_t*" name="deathID" dir="out"/>
     </function>
- 
+
     <function name="proc_unwatch_client" return='refos_err_t'>
         ! @brief Stop watching a client and remove death notifications about it.
 
         @param liveness The liveliness cap of the client.
-        @return ESUCCESS if success, refos_error error code otherwise.
-        
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
+
         <param type="seL4_CPtr" name="liveness"/>
     </function>
 
@@ -92,7 +92,7 @@
 
         @param window Capability of the window to resize. (No ownership)
         @param size The new window size.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="window"/>
         <param type="uint32_t" name="size"/>
@@ -102,7 +102,7 @@
         ! @brief Delete a memory window segment.
 
         @param window Capability of the window to delete. (Takes ownersip)
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="window"/>
     </function>
@@ -138,7 +138,7 @@
         @param faultNotifyEP The async endpoint which the fault notifications will be sent through.
         @param winID The ID of the window, which will be used to identify which window faulted. The
                      server most likely will have to book-keep this ID to handle faults correctly.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="window"/>
         <param type="seL4_CPtr" name="faultNotifyEP"/>
@@ -161,7 +161,7 @@
         of dataspaces are supported.
 
         @param dataspace The dataspace to use as the notification buffer.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="dataspace"/>
     </function>
@@ -178,7 +178,7 @@
         @param windowOffset The offset into the window to map the frame into.
         @param srcAddr The address of the source frame in the calling process's own VSpace;
                this address should contain a valid frame, and should be page-aligned.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="window"/>
         <param type="uint32_t" name="windowOffset"/>
@@ -207,23 +207,23 @@
         @param dataspace The dataspace to use as the parameter buffer for subsequent procserv
                          syscalls.
         @param size The size of the param buffer.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="dataspace"/>
         <param type="uint32_t" name="size"/>
     </function>
 
     <function name="proc_new_proc" return='refos_err_t'>
-        ! @brief Runs a new process. 
+        ! @brief Runs a new process.
 
         Starts a new process, blocking or non-blocking.
-    
+
         @param name The executable file name of the process to start.
         @param params The parameters to pass onto the new process.
         @param block Whether to block until the process exits. (1/0) (non-blocking unimplemented)
         @param priority The priority (0-255) of the new process.
         @param status The exit status of the process. (output, only used if blocking is set)
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="char*" name="name"/>
         <param type="char*" name="params"/>
@@ -265,8 +265,8 @@
 
         @param threadID The thread ID to set priority for.
         @param priority The priority to set to.
-        @return ESUCCESS if success, refos_error error code otherwise.
-        
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
+
         <param type="int" name="threadID"/>
         <param type="int" name="priority"/>
     </function>

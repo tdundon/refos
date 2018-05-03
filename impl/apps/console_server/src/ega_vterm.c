@@ -65,7 +65,7 @@ vterm_internal_rgb_to_vterm_colour_index(int r, int g, int b)
         {  64, 255, 255 }, // cyan
         { 255, 255, 255 }, // white for real
     };
-    
+
     static const int tableANSI2VGA[] = {
         VTERM_BLACK,
         VTERM_LOW_RED,
@@ -84,7 +84,7 @@ vterm_internal_rgb_to_vterm_colour_index(int r, int g, int b)
         VTERM_HIGH_CYAN,
         VTERM_HIGH_WHITE
     };
-    
+
     const int vtermANSIColorsNum = 16;
     for (int i = 0; i < vtermANSIColorsNum; i++) {
         if (r == vtermANSIColors[i].red &&
@@ -105,7 +105,7 @@ vterm_internal_colour_to_vterm_colour_index(VTermColor col)
 /* ----------------------------- Virtual Terminal Functions ------------------------------------- */
 
 int
-vterm_init(vterm_state_t *s, int width, int height, volatile uint16_t *buffer) 
+vterm_init(vterm_state_t *s, int width, int height, volatile uint16_t *buffer)
 {
     memset(s, 0, sizeof(vterm_state_t));
 
@@ -122,20 +122,20 @@ vterm_init(vterm_state_t *s, int width, int height, volatile uint16_t *buffer)
     s->vt = vterm_new(s->height, s->width);
     if (!s->vt) {
         ROS_ERROR("Failed to create terminal.\n");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
-    
+
     /* Grab the virtual screen & state object. */
     s->vts = vterm_obtain_screen(s->vt);
     s->vtstate = vterm_obtain_state(s->vt);
     assert(s->vts && s->vtstate);
-    
+
     /* Set parameters. */
     vterm_parser_set_utf8(s->vt, true);
     vterm_state_set_bold_highbright(s->vtstate, true);
     vterm_screen_reset(s->vts, 1);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void vterm_deinit(vterm_state_t *s)
@@ -177,15 +177,15 @@ void
 vterm_render_buffer(vterm_state_t *s)
 {
     assert(s && s->magic == VTERM_MAGIC && s->buffer);
-    
+
     int bufferHeight, bufferWidth;
     vterm_get_size(s->vt, &bufferHeight, &bufferWidth);
-    
+
     for (int i = 0; i < bufferHeight; i++) {
         for (int j = 0; j < bufferWidth; ) {
             VTermPos pos = {
                 .row = i,
-                .col = j  
+                .col = j
             };
             VTermScreenCell cell;
             vterm_screen_get_cell(s->vts, pos, &cell);

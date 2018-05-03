@@ -30,7 +30,7 @@
 #include <vspace/vspace.h>
 #include "../../common.h"
 
-#define RAM_DATASPACE_MAGIC 0xF89D8531 
+#define RAM_DATASPACE_MAGIC 0xF89D8531
 #define RAM_DATASPACE_LIST_MAGIC 0xC923BE76
 #define RAM_DATASPACE_WAITER_MAGIC 0x351095BC
 #define RAM_DATASPACE_INVALID_ID 0
@@ -138,7 +138,7 @@ struct ram_dspace *ram_dspace_get(struct ram_dspace_list *rdslist, int ID);
  */
 struct ram_dspace *ram_dspace_get_badge(struct ram_dspace_list *rdslist, seL4_Word badge);
 
-/*! @brief Returns the size in bytes of the given dataspace. 
+/*! @brief Returns the size in bytes of the given dataspace.
     @param dataspace The dataspace to retrieve size for.
     @return Size of the given dataspace in bytes on success, 0 otherwise.
 */
@@ -147,7 +147,7 @@ uint32_t ram_dspace_get_size(struct ram_dspace *dataspace);
 /*! @brief Expands the given dataspace.
     @param dataspace The dataspace to expand for.
     @param size The new dataspace size.
-    @return ESUCCESS on success, refos_error otherwise.
+    @return REFOS_ESUCCESS on success, refos_error otherwise.
 */
 int ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size);
 
@@ -161,7 +161,7 @@ int ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size);
 
     @param dataspace The dataspace to set physical address for.
     @param paddr The physical address to start the dataspace at.
-    @return ESUCCESS on success, refos_error otherwise.
+    @return REFOS_ESUCCESS on success, refos_error otherwise.
 */
 int ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr);
 
@@ -172,7 +172,7 @@ int ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr);
     @param len The length of the data to be copied.
     @param dataspace The source ram dataspace. (No ownership)
     @param offset The offset into the dataspace to read from.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
  */
 int ram_dspace_read(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t offset);
 
@@ -181,7 +181,7 @@ int ram_dspace_read(char *buf, size_t len, struct ram_dspace *dataspace, uint32_
     @param len The length of the data to be written.
     @param dataspace The target dataspace to be written to. (No ownership)
     @param offset The offset into the dataspace to write to.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
  */
 int ram_dspace_write(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t offset);
 
@@ -191,7 +191,7 @@ int ram_dspace_write(char *buf, size_t len, struct ram_dspace *dataspace, uint32
     @param dataspace The dataspace set content init for.
     @param initEP The external dspace server that will initialise this dataspace. (Takes ownership)
     @param initPID The external dspace server PID.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
 */
 int ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, uint32_t initPID);
 
@@ -199,7 +199,7 @@ int ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, u
     @param dataspace The target dataspace.
     @param offset The offset into the dataspace to get content init state for.
     @return TRUE if need content init at given offset, FALSE if already initialised, or -refos_error
-            if content init is not enabled for the given dataspace, or if offset is invalid.  
+            if content init is not enabled for the given dataspace, or if offset is invalid.
 */
 int ram_dspace_need_content_init(struct ram_dspace *dataspace, uint32_t offset);
 
@@ -211,7 +211,7 @@ int ram_dspace_need_content_init(struct ram_dspace *dataspace, uint32_t offset);
     @param dataspace The dataspace that the waiter wants to wait on.
     @param offset The offset at which the client is waiting for, into the dataspace.
     @param reply The reply endpoint, which will unblock the waiting client.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
 */
 int ram_dspace_add_content_init_waiter(struct ram_dspace *dataspace, uint32_t offset,
                                        cspacepath_t reply);
@@ -219,7 +219,7 @@ int ram_dspace_add_content_init_waiter(struct ram_dspace *dataspace, uint32_t of
 /*! @brief Add a new content-init blocked waiter using current caller reply cap.
     @param dataspace The dataspace that the waiter wants to wait on.
     @param offset The offset at which the client is waiting for, into the dataspace.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
 */
 int ram_dspace_add_content_init_waiter_save_current_caller(struct ram_dspace *dataspace,
                                                            uint32_t offset);

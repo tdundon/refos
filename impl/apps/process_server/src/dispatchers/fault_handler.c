@@ -63,7 +63,7 @@ output_segmentation_fault(const char* message, struct procserv_vmfault_msg *f)
 }
 
 /*! @brief Helper function to delegate fault message to an external endpoint.
-    
+
     Writes the given message to the delegator's notification ring buffer,  and then sends an async
     notification along the EP the delegator has set up previously.  This helper function is used for
     every kind of notification.
@@ -123,7 +123,7 @@ fault_delegate_notification(struct procserv_vmfault_msg *f, struct proc_pcb *del
     @param f The VM fault message info struct.
     @param aw Found associated window of the faulting address & client.
     @param window The window structure of the faulting address & client.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 static int
 handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
@@ -144,13 +144,13 @@ handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
         int contentInitState =  ram_dspace_need_content_init(dspace, dspaceOffset);
         if (contentInitState < 0) {
             output_segmentation_fault("Failed to retrieve content-init state.", f);
-            return EINVALID;
+            return REFOS_EINVALID;
         }
         if (contentInitState == true) {
             /* Content has not yet been initialised so we delegate. */
             if (f->faultAddr + window->ramDataspaceOffset >= aw->offset + aw->size) {
                 output_segmentation_fault("Fault address out of range!", f);
-                return EINVALID;
+                return REFOS_EINVALID;
             }
 
             /* Find the pager's PCB. */
@@ -158,19 +158,19 @@ handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
             struct proc_pcb* cinitPCB = pid_get_pcb(&procServ.PIDList, dspace->contentInitPID);
             if (!cinitPCB) {
                 output_segmentation_fault("Invalid content initialiser PID.", f);
-                return EINVALID;
+                return REFOS_EINVALID;
             }
             if (!dspace->contentInitEP.capPtr) {
                 output_segmentation_fault("Invalid content-init endpoint!", f);
-                return EINVALID;
+                return REFOS_EINVALID;
             }
 
             /* Save the reply endpoint. */
             int error = ram_dspace_add_content_init_waiter_save_current_caller(dspace,
                     dspaceOffset);
-            if (error != ESUCCESS) {
+            if (error != REFOS_ESUCCESS) {
                 output_segmentation_fault("Failed to save reply cap as dspace waiter!", f);
-                return EINVALID;
+                return REFOS_EINVALID;
             }
 
             /* Set up and send the fault notification. */
@@ -184,7 +184,7 @@ handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
                                         false);
 
             /* Return an error here to avoid resuming the client. */
-            return EDELEGATED;
+            return REFOS_EDELEGATED;
         }
 
         /* Fallthrough to normal dspace mapping if content-init state is set to already provided. */
@@ -194,17 +194,17 @@ handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
     seL4_CPtr frame = ram_dspace_get_page(dspace, dspaceOffset);
     if (!frame) {
         output_segmentation_fault("Out of memory to allocate page or read off end of dspace.", f);
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Map this frame into the client process's page directory. */
     int error = vs_map(&f->pcb->vspace, f->faultAddr, &frame, 1);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         output_segmentation_fault("Failed to map frame into client's vspace at faultAddr.", f);
         return error;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! \brief Handles faults on windows set to external pager.
@@ -212,12 +212,12 @@ handle_vm_fault_dspace(struct procserv_msg *m, struct procserv_vmfault_msg *f,
     This functions handles the VM faults which results in a window that has been set up to be in
     external paged mode. we simply delegate to the external pager and they'll call data_datamap
     back on us and take are of the rest.
-    
+
     @param m The recieved IPC fault message from the kernel.
     @param f The VM fault message info struct.
     @param aw Found associated window of the faulting address & client.
     @param window The window structure of the faulting address & client.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 static int
 handle_vm_fault_pager(struct procserv_msg *m, struct procserv_vmfault_msg *f,
@@ -243,14 +243,14 @@ handle_vm_fault_pager(struct procserv_msg *m, struct procserv_vmfault_msg *f,
     struct proc_pcb* pagerPCB = pid_get_pcb(&procServ.PIDList, window->pagerPID);
     if (!pagerPCB) {
         output_segmentation_fault("Invalid pager PID.", f);
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
-    /* Send the delegation notification. */    
+    /* Send the delegation notification. */
     fault_delegate_notification(f, pagerPCB, window->pager, vmFaultNotification, true);
 
     /* Return an error here to avoid resuming the client. */
-    return EDELEGATED;
+    return REFOS_EDELEGATED;
 }
 
 /*! @brief Handles client VM fault messages sent by the kernel.
@@ -259,7 +259,7 @@ handle_vm_fault_pager(struct procserv_msg *m, struct procserv_vmfault_msg *f,
     decides whether this fault should be delegated to an external dataspace server for paging
     or content initalisation, or be handled internally by the process server's own dataspace
     implementation for RAM, or is an invalid memory access.
-    
+
     In the case of an invalid memory access, or if the process server runs out of RAM, then
     the fault is unable to be handled and the faulting process is blocked indefinitely.
 
@@ -315,7 +315,7 @@ handle_vm_fault(struct procserv_msg *m, struct procserv_vmfault_msg *f)
     }
 
     /* Handle the dispatch request depending on window mode. */
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
     switch (window->mode) {
         case W_MODE_EMPTY:
             output_segmentation_fault("fault in empty window.", f);
@@ -332,7 +332,7 @@ handle_vm_fault(struct procserv_msg *m, struct procserv_vmfault_msg *f)
     }
 
     /* Reply to the faulting process to unblock it. */
-    if (error == ESUCCESS) {
+    if (error == REFOS_ESUCCESS) {
         seL4_Reply(_dispatcherEmptyReply);
     }
 }

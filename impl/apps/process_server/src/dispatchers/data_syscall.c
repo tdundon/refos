@@ -39,14 +39,14 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
     (void) rpc_mode;
 
     if (rpc_size <= 0) {
-        SET_ERRNO_PTR(rpc_errno, EINVALIDPARAM);
+        SET_ERRNO_PTR(rpc_errno, REFOS_EINVALIDPARAM);
         return 0;
     }
 
     /* Name must either be NULL, empty string or anon. */
     if (rpc_name != NULL) {
         if (strlen(rpc_name) > 0 && strcmp(rpc_name, "anon") != 0) {
-            SET_ERRNO_PTR(rpc_errno, EFILENOTFOUND);
+            SET_ERRNO_PTR(rpc_errno, REFOS_EFILENOTFOUND);
             return 0;
         }
     }
@@ -55,13 +55,13 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
     struct ram_dspace *newDataspace = ram_dspace_create(&procServ.dspaceList, rpc_size);
     if (!newDataspace) {
         ROS_ERROR("Failed to create new_dataspace.\n");
-        SET_ERRNO_PTR(rpc_errno, ENOMEM);
+        SET_ERRNO_PTR(rpc_errno, REFOS_ENOMEM);
         return 0;
     }
 
     /* Set physical address mode, if required. */
     if ((rpc_flags & PROCSERV_DSPACE_FLAG_DEVICE_PADDR) != 0) {
-        int error = EACCESSDENIED;
+        int error = REFOS_EACCESSDENIED;
         if (pcb->systemCapabilitiesMask & PROCESS_PERMISSION_DEVICE_MAP) {
             error = ram_dspace_set_to_paddr(newDataspace, (uint32_t) rpc_mode);
         }
@@ -72,7 +72,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
         }
     }
 
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     assert(newDataspace->magic == RAM_DATASPACE_MAGIC);
     return newDataspace->capability.capPtr;
 }
@@ -86,18 +86,18 @@ data_close_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
         ROS_ERROR("data_close EINVALIDPARAM: bad dataspace capability.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
         ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
         ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Purge the dataspace from all windows, unmapping every instance of it. */
@@ -114,7 +114,7 @@ data_close_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
 
     /* And finally destroy the RAM dataspace. */
     ram_dspace_unref(&procServ.dspaceList, dspace->ID);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -122,7 +122,7 @@ data_getc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_block)
 {
     (void) rpc_userptr;
     (void) rpc_dspace_fd;
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 off_t
@@ -133,7 +133,7 @@ data_lseek_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , off_t rpc_offse
     (void) rpc_dspace_fd;
     (void) rpc_offset;
     (void) rpc_whence;
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 uint32_t
@@ -151,12 +151,12 @@ data_get_size_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
         ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
         ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     return dspace->npages * REFOS_PAGE_SIZE;
@@ -170,18 +170,18 @@ data_expand_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_s
     assert(pcb && pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
         ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
         ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     return ram_dspace_expand(dspace, rpc_size);
@@ -197,38 +197,38 @@ data_datamap_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr rpc
     assert(pcb && pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000003, 2)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve and validate window badge. */
-    if (!dispatcher_badge_window(rpc_memoryWindow)) { 
-        return EINVALIDWINDOW;
+    if (!dispatcher_badge_window(rpc_memoryWindow)) {
+        return REFOS_EINVALIDWINDOW;
     }
     struct w_window *window = w_get_window(&procServ.windowList, rpc_memoryWindow - W_BADGE_BASE);
     if (!window) {
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
-        ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: invalid RAM dataspace badge..\n");
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
-        ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: dataspace not found.\n");
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Check that the offset is sane. */
     if (rpc_offset > (dspace->npages * REFOS_PAGE_SIZE)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Associate the dataspace with the window. This will release whatever the window was associated
        with beforehand. */
     w_set_anon_dspace(window, dspace, rpc_offset);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t
@@ -239,31 +239,31 @@ data_dataunmap_handler(void *rpc_userptr , seL4_CPtr rpc_memoryWindow)
     assert(pcb && pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve and validate window badge. */
-    if (!dispatcher_badge_window(rpc_memoryWindow)) { 
-        return EINVALIDWINDOW;
+    if (!dispatcher_badge_window(rpc_memoryWindow)) {
+        return REFOS_EINVALIDWINDOW;
     }
     struct w_window *window = w_get_window(&procServ.windowList, rpc_memoryWindow - W_BADGE_BASE);
     if (!window) {
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
-    
+
     /* If window is already empty, then there's nothing to do here. */
     if (window->mode == W_MODE_EMPTY) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* If window is mapped to something else, the un-do operation should not be data_unmap. */
     if (window->mode != W_MODE_ANONYMOUS) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Reset the window back to empty. */
     w_set_anon_dspace(window, NULL, 0);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 
@@ -279,7 +279,7 @@ data_init_data_handler(void *rpc_userptr , seL4_CPtr rpc_destDataspace ,
     /* Process server doesn't support init_data syscall.
        Who on earth would want to initialise another dataspace by anonymous memory? */
 
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 /*! \brief Call from external dataserver asking to be the content initialiser for this dataspace. */
@@ -292,7 +292,7 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
     assert(pcb && pcb->magic == REFOS_PCB_MAGIC);
 
     if (!(check_dispatch_caps(m, 0x00000001, 2) || check_dispatch_caps(m, 0x00000001, 1))) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     if (rpc_dataID) {
@@ -301,13 +301,13 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
 
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
-        ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: invalid RAM dataspace badge..\n");
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
-        ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: dataspace not found.\n");
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Special case - no fault notify EP, means unset content-init mode. */
@@ -321,14 +321,14 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
     seL4_CPtr faultNotifyEP = dispatcher_copyout_cptr(rpc_faultNotifyEP);
     if (!faultNotifyEP) {
         dvprintf("could not copy out faultNotifyEP.");
-        return EINVALIDPARAM; 
+        return REFOS_EINVALIDPARAM;
     }
     cspacepath_t path;
     vka_cspace_make_path(&procServ.vka, faultNotifyEP, &path);
 
     /* Initialise the dataspace content with given dataserver EP. */
     int error = ram_dspace_content_init(dspace, path, pcb->pid);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         dispatcher_release_copyout_cptr(faultNotifyEP);
         return error;
     }
@@ -336,7 +336,7 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
     if (rpc_dataID) {
         (*rpc_dataID) = dspace->ID;
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t
@@ -357,29 +357,29 @@ data_provide_data_from_parambuffer_handler(void *rpc_userptr , seL4_CPtr rpc_dsp
     assert(pcb && pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Verify and find the RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dspace_fd)) {
-        ROS_ERROR("EINVALIDPARAM: invalid RAM dataspace badge..\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: invalid RAM dataspace badge..\n");
+        return REFOS_EINVALIDPARAM;
     }
     struct ram_dspace *dspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dspace_fd);
     if (!dspace) {
-        ROS_ERROR("EINVALIDPARAM: dataspace not found.\n");
-        return EINVALIDPARAM;
+        ROS_ERROR("REFOS_EINVALIDPARAM: dataspace not found.\n");
+        return REFOS_EINVALIDPARAM;
     }
 
     char *initContentBuffer = dispatcher_read_param(pcb, rpc_contentSize);
     if (!initContentBuffer) {
         ROS_WARNING("data_provide_data_from_parambuffer_handler: failed to read from paramBuffer.");
-        return ENOPARAMBUFFER;
+        return REFOS_ENOPARAMBUFFER;
     }
 
     /* Initialise the page of the ram dataspace with these contents. */
     int error = ram_dspace_write(initContentBuffer, rpc_contentSize, dspace, rpc_offset);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         return error;
     }
 
@@ -392,7 +392,7 @@ data_provide_data_from_parambuffer_handler(void *rpc_userptr , seL4_CPtr rpc_dsp
         ram_dspace_content_init_reply_waiters(dspace, offset);
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int

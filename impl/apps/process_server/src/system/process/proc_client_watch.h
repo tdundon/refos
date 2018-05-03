@@ -55,7 +55,7 @@ seL4_CPtr client_watch_get(struct proc_watch_list *wl, uint32_t pid);
     @param wl The watch list to add to.
     @param pid The PID of client to watch.
     @param notifyEP The watcher notify async EP.
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
 */
 int client_watch(struct proc_watch_list *wl, uint32_t pid, seL4_CPtr notifyEP);
 

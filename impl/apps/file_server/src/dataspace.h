@@ -28,7 +28,7 @@
 #include <refos-rpc/rpc.h>
 
 /*! @file
-    @brief File server CPIO dataspace object allocation and management. */  
+    @brief File server CPIO dataspace object allocation and management. */
 
 #define FILESERVER_MAX_DATASPACES 8192
 #define FILESERVER_DSPACE_ASSOC_HASHSIZE 4096
@@ -135,7 +135,7 @@ void dspace_delete(struct fs_dataspace_table *dt, int id);
     @param dsID The dataspace to associate with given window.
     @param dsOffset The offset into the dataspace, at which it is mapped into the window.
     @param windowCap Capability to the window, corresponding to given windowID.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int dspace_window_associate(struct fs_dataspace_table *dt, int winID, int dsID, int dsOffset,
                             seL4_CPtr windowCap);
@@ -153,7 +153,7 @@ void dspace_window_unassociate(struct fs_dataspace_table *dt, int winID);
 struct dataspace_association_info *dspace_window_find(struct fs_dataspace_table *dt, int winID);
 
 /*! @brief Associate given external dataspace with the dataspace.
-    
+
     When a client data-inits an external CPIO dataspace with one of ours, we need to book-keep
     the externalDS ――▶ internalDS relationship. This function does this book-keeping, so when
     the external dataserv notifies us to provide content for one of its dataspaces, we know
@@ -165,7 +165,7 @@ struct dataspace_association_info *dspace_window_find(struct fs_dataspace_table 
     @param dsID The internal dataspace ID, which contains the content to be initialised.
     @param dsOffset The offset into the dataspace, at which it is content initialised.
     @param xdspaceCap The external dataspace cap.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int dspace_external_associate(struct fs_dataspace_table *dt, int xdsID, int dsID, int dsOffset,
                               seL4_CPtr xdspaceCap);

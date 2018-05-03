@@ -72,7 +72,7 @@ uint64_t device_timer_get_time(struct device_timer_state *s);
     @param c The client structure of the waiting client.
     @param waitTime The amount of time in nanoseconds that the client wishes to wait, relative to
                     now.
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
 */
 int device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_client *c,
         uint64_t waitTime);

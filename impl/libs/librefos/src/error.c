@@ -15,4 +15,4 @@
 /*! @file
     @brief RefOS Error codes. */
 
-refos_err_t _refos_errno = ESUCCESS;
+refos_err_t _refos_errno = REFOS_ESUCCESS;

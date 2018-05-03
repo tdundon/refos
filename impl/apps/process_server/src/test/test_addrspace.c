@@ -63,7 +63,7 @@ test_vspace(int run)
         uint32_t bogusPID = (i * 31337 % 1234);
         error = vs_initialise(&vs[i], bogusPID);
 
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
         test_assert(vs[i].magic == REFOS_VSPACE_MAGIC);
         test_assert(vs[i].ref == 1);
         test_assert(vs[i].pid == bogusPID);
@@ -115,7 +115,7 @@ test_vspace_mapping(void)
     /* Create a vspace for testing mapping. */
     struct vs_vspace vs;
     int error = vs_initialise(&vs, 31337);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(vs.magic == REFOS_VSPACE_MAGIC);
 
     /* Create a memory segment window. */
@@ -124,44 +124,44 @@ test_vspace_mapping(void)
     int windowID;
     error = vs_create_window(&vs, window, windowSize, W_PERMISSION_WRITE | W_PERMISSION_READ,
             true, &windowID);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(windowID != W_INVALID_WINID);
 
     /* Allocate a frame to map. */
     vka_object_t frame;
     error = vka_alloc_frame(&procServ.vka, seL4_PageBits, &frame);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(frame.cptr != 0);
 
     /* Try to map in some invalid spots. */
     tvprintf("trying mapping into invalid spots...\n");
     error = vs_map(&vs, 0x9A0, &frame.cptr, 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
     error = vs_map(&vs, window - 0x9A0, &frame.cptr, 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
     error = vs_map(&vs, window + windowSize + 0x1, &frame.cptr, 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
     error = vs_map(&vs, window + windowSize + 0x5123, &frame.cptr, 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
 
     /* Try to unmap from some invalid spots. */
     tvprintf("trying unmapping from invalid spots...\n");
     error = vs_unmap(&vs, window - 0x9A0, 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
     error = vs_unmap(&vs, window + windowSize + 0x423, 5);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
     error = vs_unmap(&vs, window, windowSize + 1);
-    test_assert(error == EINVALIDWINDOW);
+    test_assert(error == REFOS_EINVALIDWINDOW);
 
     /* Map the frame many times in all the valid spots. */
     for (vaddr_t waddr = window; waddr < window + windowSize; waddr += (1 << seL4_PageBits)) {
         tvprintf("trying mapping into valid spot 0x%x...\n", (uint32_t) waddr);
         /* Map the frame. */
         error = vs_map(&vs, waddr, &frame.cptr, 1);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
         /* Try to map frame here again. Should complain. */
         error = vs_map(&vs, waddr, &frame.cptr, 1);
-        test_assert(error == EUNMAPFIRST);
+        test_assert(error == REFOS_EUNMAPFIRST);
     }
 
     /* Unmap and remap the frame many times in all the valid spots. */
@@ -169,10 +169,10 @@ test_vspace_mapping(void)
         tvprintf("trying remapping into valid spot 0x%x...\n", (uint32_t) waddr);
         /* Unmap the frame. */
         error = vs_unmap(&vs, waddr, 1);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
         /* Remap the frame. */
         error = vs_map(&vs, waddr, &frame.cptr, 1);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
     }
 
     /* Clean up. Note that deleting the vspace should delete the created window. */

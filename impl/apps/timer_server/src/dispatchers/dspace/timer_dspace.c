@@ -33,7 +33,7 @@ timer_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_
 {
     /* Return the timer dataspace badged EP. */
     assert(timeServ.timerBadgeEP);
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     return timeServ.timerBadgeEP;
 }
 
@@ -46,7 +46,7 @@ timer_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_o
     assert(rpc_dspace_fd == TIMESERV_DSPACE_BADGE_TIMER);
 
     if (rpc_buf.count < sizeof(uint64_t)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     /* Writing to the timer dataspace results in a sleep call. */
@@ -54,7 +54,7 @@ timer_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_o
     dvprintf("timer_write_handler client waiting for %llu nanoseconds.\n", timeWait);
 
     int error = device_timer_save_caller_as_waiter(&timeServ.devTimer, c, timeWait);
-    if (error == ESUCCESS) {
+    if (error == REFOS_ESUCCESS) {
         c->rpcClient.skip_reply = true;
     }
     return -error;
@@ -65,7 +65,7 @@ timer_read_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_of
                         rpc_buffer_t rpc_buf , uint32_t rpc_count)
 {
     if (!rpc_buf.count) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
     if (rpc_buf.count < sizeof(uint64_t)) {
         ROS_WARNING("Buffer not large enough: need %d only got %d.", sizeof(uint64_t),

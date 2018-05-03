@@ -22,7 +22,7 @@ thread_config(struct proc_tcb *thread, uint8_t priority, vaddr_t entryPoint,
     assert(thread);
     if (!entryPoint || !vspace) {
         memset(thread, 0, sizeof(struct proc_tcb));
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Configure the new thread struct. */
@@ -44,10 +44,10 @@ thread_config(struct proc_tcb *thread, uint8_t priority, vaddr_t entryPoint,
         ROS_ERROR("Failed to configure thread for new process, error: %d.\n", error);
         memset(thread, 0, sizeof(struct proc_tcb));
         vs_unref(vspace);
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -72,10 +72,10 @@ thread_start(struct proc_tcb *thread, void *arg0, void *arg1)
     int error = seL4_TCB_Resume(thread->sel4utilsThread.tcb.cptr);
     if (error) {
         ROS_ERROR("sel4utils_start_thread failed. error: %d.", error);
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void

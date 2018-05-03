@@ -82,13 +82,13 @@ refosio_morecore_expand(sl_dataspace_t *region, size_t sizeAdd)
     assert(region && region->dataspace && region->vaddr);
     if (sizeAdd <= 0) {
         /* Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
     refosio_internal_save_IPC_buffer();
 
     /* Expand the dataspace. */
     int error = data_expand(REFOS_PROCSERV_EP, region->dataspace, region->size + sizeAdd);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         seL4_DebugPrintf("WARNING: refosio_morecore_expand failed to expand dspace.\n");
         seL4_DebugPrintf("Client's malloc will be broken.\n");
         return error;
@@ -97,7 +97,7 @@ refosio_morecore_expand(sl_dataspace_t *region, size_t sizeAdd)
     /* Resize the brk window to fit. */
     assert(region->window);
     error = proc_resize_mem_window(region->window, region->size + sizeAdd);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         seL4_DebugPrintf("WARNING: refosio_morecore_expand failed to expand window.\n");
         seL4_DebugPrintf("Client's malloc will be broken.\n");
         return error;
@@ -110,5 +110,5 @@ refosio_morecore_expand(sl_dataspace_t *region, size_t sizeAdd)
 #endif
 
     region->size += sizeAdd;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }

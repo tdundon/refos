@@ -11,7 +11,7 @@
  */
 
 /*! @file
-    @brief Client address space objects. 
+    @brief Client address space objects.
 
     This module is responsible for managing a client's vspace (and cspace included). Exposes memory
     segment window management, mapping & unmapping, along with seL4utils reservations. vs_vspace
@@ -72,7 +72,7 @@ struct vs_vspace {
     @param vs The VSpace structure to intialise (No ownership)
     @param pid The allocated unique PID to assign this vspace to. Each process has exactly one
                addrspace, so the ASID is the PID.
-    @return ESUCCESS if success, refos-err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos-err_t otherwise.
 */
 int vs_initialise(struct vs_vspace *vs, uint32_t pid);
 
@@ -109,7 +109,7 @@ void vs_track_obj(struct vs_vspace *vs, vka_object_t object);
     @param permissions Permissions flags bitmask. (W_PERMISSION_WRITE / W_PERMISSION_READ)
     @param cacheable Whether this memory segment is cacheable.
     @param winID Optional output containing the ID of window assigned to the created segment.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word permissions,
                      bool cacheable, int *winID);
@@ -134,7 +134,7 @@ void vs_delete_window(struct vs_vspace *vs, int wID);
     @param vs The vspace to resize given memory segment window in.
     @param wID The windowID of window to resize. This window should belong in the vspace given.
     @param size The new window segment size.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_resize_window(struct vs_vspace *vs, int wID, vaddr_t size);
 
@@ -146,7 +146,7 @@ int vs_resize_window(struct vs_vspace *vs, int wID, vaddr_t size);
     @param vaddr The starting destination vaddr into vspace to map frames into.
     @param frames Array of frames to map.
     @param nFrames Number of frames in given frame array.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames);
 
@@ -156,19 +156,19 @@ int vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
     @param windowDest Destination window to map into.
     @param windowDestOffset Offset into destination window.
     @param outClientPCB Optional destination client PCB which uses this vspace.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_map_across_vspace(struct vs_vspace *vsSrc, vaddr_t vaddrSrc, struct w_window *windowDest,
                          uint32_t windowDestOffset, struct proc_pcb **outClientPCB);
 
-/*! @brief Find & map a device frame into client's vspace. 
+/*! @brief Find & map a device frame into client's vspace.
     @param vs The vspace to map device frame into.
     @param window The window in which to map the device.
     @param windowOffset Offset into the window at which the device frame(s) will be mapped.
     @param paddr The physical address of the device to map.
     @param size Size of the device frames.
     @param cached Whether to map the device frame cached.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_map_device(struct vs_vspace *vs, struct w_window *window, uint32_t windowOffset,
                   uint32_t paddr , uint32_t size, bool cached);
@@ -178,7 +178,7 @@ int vs_map_device(struct vs_vspace *vs, struct w_window *window, uint32_t window
     @param vs The vspace to unmap frames from.
     @param vaddr The vaddr to unmap frames from.
     @param nFrames The number of 4k frames from given vaddr to unmap.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int vs_unmap(struct vs_vspace *vs, vaddr_t vaddr, int nFrames);
 

@@ -63,7 +63,7 @@ sl_roundup_page(int addr)
 
 /*! @brief Open the ELF header dataspace, and map it so we can read it.
    @param fsSession Resolved mount point and session of ELF header dataspace.
-   @return ESUCCESS on success, refos_err_t otherwise.
+   @return REFOS_ESUCCESS on success, refos_err_t otherwise.
  */
 static int
 sl_setup_elf_header(serv_connection_t* fsSession)
@@ -77,11 +77,11 @@ sl_setup_elf_header(serv_connection_t* fsSession)
 
     selfloaderState.elfFileHeader = data_open_map(fsSession->serverSession,
             fsSession->serverMountPoint.dspaceName, 0, 0, SELFLOADER_ELF_HEADER_SIZE, -1);
-    if (selfloaderState.elfFileHeader.err != ESUCCESS) {
+    if (selfloaderState.elfFileHeader.err != REFOS_ESUCCESS) {
         ROS_ERROR("sl_setup_elf_header failed to open file.");
         return selfloaderState.elfFileHeader.err;
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Helper function to map out a zero vspace segment. Simply opens an anonymous dataspace
@@ -93,12 +93,12 @@ sl_setup_elf_header(serv_connection_t* fsSession)
    @param out[out] Optional output struct to store windows & dataspace capabilities. If this is
                    set to NULL, the created window and dataspace caps are simply used then
                    discarded.
-   @return ESUCCESS on success, refos_err_t otherwise.
+   @return REFOS_ESUCCESS on success, refos_err_t otherwise.
  */
 static int
 sl_create_zero_segment(seL4_Word start, seL4_Word size, seL4_Word windowSize, sl_dataspace_t *out)
 {
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     sl_dataspace_t *elfSegment = out;
     if (!elfSegment) {
@@ -112,7 +112,7 @@ sl_create_zero_segment(seL4_Word start, seL4_Word size, seL4_Word windowSize, sl
     /* Open a anon ram dataspace on procserv. */
     dvprintf("    Creating zero segment dataspace ...\n");
     elfSegment->dataspace = data_open(REFOS_PROCSERV_EP, "anon", 0, 0, size, &error);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_ERROR("Failed to open zero segment anon dspace.");
         return error;
     }
@@ -120,7 +120,7 @@ sl_create_zero_segment(seL4_Word start, seL4_Word size, seL4_Word windowSize, sl
     /* Create the zero-initalised window for this segment. */
     dvprintf("    Creating zero segment window ...\n");
     elfSegment->window = proc_create_mem_window(start, windowSize);
-    if (!elfSegment->window || ROS_ERRNO() != ESUCCESS) {
+    if (!elfSegment->window || ROS_ERRNO() != REFOS_ESUCCESS) {
         ROS_ERROR("Failed to create ELF zero segment window.");
         return error;
     }
@@ -128,7 +128,7 @@ sl_create_zero_segment(seL4_Word start, seL4_Word size, seL4_Word windowSize, sl
     /* Map the zero dataspace into the window. */
     dvprintf("    Data mapping zero segment ...\n");
     error = data_datamap(REFOS_PROCSERV_EP, elfSegment->dataspace, elfSegment->window, 0);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_ERROR("Failed to datamap ELF zero segment.");
         return error;
     }
@@ -145,13 +145,13 @@ sl_create_zero_segment(seL4_Word start, seL4_Word size, seL4_Word windowSize, sl
         elfSegment->size = 0;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Load an ELF segment region into current vspace.
    @param si The ELF segment infor structure, read from the ELF header.
    @param fsSession The dataserver session containing ELF file contents.
-   @return ESUCCESS on success, refos_err_t otherwise.
+   @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 static int
 sl_elf_load_region(struct sl_elf_segment_info si, serv_connection_t* fsSession)
@@ -164,20 +164,20 @@ sl_elf_load_region(struct sl_elf_segment_info si, serv_connection_t* fsSession)
 
     data_mapping_t *elfFile = &selfloaderState.elfFileHeader;
     sl_dataspace_t *elfSegment = &selfloaderState.elfSegment;
-    assert(elfFile->err == ESUCCESS && elfFile->vaddr != NULL);
+    assert(elfFile->err == REFOS_ESUCCESS && elfFile->vaddr != NULL);
     assert(elfSegment->dataspace == 0 && elfSegment->window == 0);
 
     /* Calculate the page-alignment correction offset. */
     seL4_Word alignCorrectionOffset = si.vaddr - REFOS_PAGE_ALIGN(si.vaddr);
     if (alignCorrectionOffset > si.source) {
         ROS_ERROR("Invalid elf segment vaddr.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Open an anon ram dataspace on procserv. */
     dvprintf("    Opening dataspace...\n");
     elfSegment->dataspace = data_open(REFOS_PROCSERV_EP, "anon", 0, 0, si.fileSize, &error);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_ERROR("Failed to open ELF segment anon dataspace.");
         return error;
     }
@@ -200,7 +200,7 @@ sl_elf_load_region(struct sl_elf_segment_info si, serv_connection_t* fsSession)
     /* Create the file-initialised window for this data initialised segment anon dspace. */
     dvprintf("    Creating memory window ...");
     elfSegment->window = proc_create_mem_window(REFOS_PAGE_ALIGN(si.vaddr), windowSize);
-    if (!elfSegment->window || ROS_ERRNO() != ESUCCESS) {
+    if (!elfSegment->window || ROS_ERRNO() != REFOS_ESUCCESS) {
         ROS_ERROR("Failed to create ELF segment window.");
         return ROS_ERRNO();
     }
@@ -221,10 +221,10 @@ sl_elf_load_region(struct sl_elf_segment_info si, serv_connection_t* fsSession)
 
     if (si.segmentSize < si.fileSize) {
         ROS_ERROR("Invalid segment size in ELF file. Check for corruption.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     if (windowSize >= si.segmentSize) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Fill out the remaining un-initialised portion of the segment with a zero dataspace. */
@@ -236,13 +236,13 @@ sl_elf_load_region(struct sl_elf_segment_info si, serv_connection_t* fsSession)
         return error;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Load given ELF file into the current vspace.
     @param file Pointer to mapped ELF header contents.
     @param fsSession The dataserver session containing the ELF tile.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 static int
 sl_elf_load(char *file, serv_connection_t* fsSession)
@@ -298,7 +298,7 @@ sl_elf_load(char *file, serv_connection_t* fsSession)
         return error;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Load boot & ELF information into static address.
@@ -494,13 +494,13 @@ main(void)
     char *filePath = refos_static_param();
     if (!filePath || strlen(filePath) == 0) {
         ROS_ERROR("Invalid file path.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Connect to the file server. */
     dprintf("    Connect to the server for [%s]\n", filePath);
     selfloaderState.fileservConnection = serv_connect(filePath);
-    if (selfloaderState.fileservConnection.error != ESUCCESS) {
+    if (selfloaderState.fileservConnection.error != REFOS_ESUCCESS) {
         ROS_ERROR("Error while connecting to file server.\n");
         return error;
     }

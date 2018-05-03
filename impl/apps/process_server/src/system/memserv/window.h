@@ -45,7 +45,7 @@
 
 #define W_INVALID_WINID 0
 #define W_MAGIC 0x02B16401
-#define W_LIST_MAGIC 0x63CA5250 
+#define W_LIST_MAGIC 0x63CA5250
 
 /* Should mirror definitions in proc_client_helper.h. */
 #define W_PERMISSION_WRITE 0x1
@@ -162,7 +162,7 @@ struct w_window* w_create_window(struct w_list *wlist, vaddr_t size, int ownerPI
 /*! @brief Delete a window at given index from list, along with any stored caps.
     @param wlist The window list to delete from.
     @param windowID The windowID to delete.
-    @return ESUCCESS if success, RefOS error otherwise.
+    @return REFOS_ESUCCESS if success, RefOS error otherwise.
  */
 int w_delete_window(struct w_list *wlist, int windowID);
 
@@ -225,7 +225,7 @@ void w_purge_dspace(struct w_list *wlist, struct ram_dspace *dspace);
     @param window The window to update size for.
     @param vaddr The vaddr of the window. Should _not_ change from what it was before.
     @param size The new window size.
-    @return ESUCCESS if success, RefOS error otherwise.
+    @return REFOS_ESUCCESS if success, RefOS error otherwise.
  */
 int w_resize_window(struct w_window *window, vaddr_t vaddr, vaddr_t size);
 
@@ -239,7 +239,7 @@ void w_associate_init(struct w_associated_windowlist *aw);
     @param winID The window ID of the window to be associated. (No ownership transfer).
     @param offset The base address of the window in the address space of the process.
     @param size The size of the window.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
  */
 int w_associate(struct w_associated_windowlist *aw, int winID, vaddr_t offset, vaddr_t size);
 

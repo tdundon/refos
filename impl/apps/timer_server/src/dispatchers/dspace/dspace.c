@@ -27,7 +27,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
                   int* rpc_errno)
 {
     if (!rpc_name) {
-        SET_ERRNO_PTR(rpc_errno, EFILENOTFOUND);
+        SET_ERRNO_PTR(rpc_errno, REFOS_EFILENOTFOUND);
         return 0;
     }
 
@@ -36,7 +36,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
         return timer_open_handler(rpc_userptr, rpc_name, rpc_flags, rpc_mode, rpc_size, rpc_errno);
     }
 
-    SET_ERRNO_PTR(rpc_errno, EFILENOTFOUND);
+    SET_ERRNO_PTR(rpc_errno, REFOS_EFILENOTFOUND);
     return 0;
 }
 
@@ -48,15 +48,15 @@ data_close_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
     assert(c && (c->magic == TIMESERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == TIMESERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* No need to close timer dataspaces. */
     if (rpc_dspace_fd == TIMESERV_DSPACE_BADGE_TIMER) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
-    return EFILENOTFOUND;
+    return REFOS_EFILENOTFOUND;
 }
 
 int
@@ -68,7 +68,7 @@ data_read_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_off
     assert(c && (c->magic == TIMESERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == TIMESERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     /* Handle read from timer dataspaces. */
@@ -76,7 +76,7 @@ data_read_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_off
         return timer_read_handler(rpc_userptr, rpc_dspace_fd, rpc_offset, rpc_buf, rpc_count);
     }
 
-    return -EFILENOTFOUND;
+    return -REFOS_EFILENOTFOUND;
 }
 
 int
@@ -88,7 +88,7 @@ data_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_of
     assert(c && (c->magic == TIMESERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == TIMESERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     /* Handle write to timer dataspaces. */
@@ -96,25 +96,25 @@ data_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_of
         return timer_write_handler(rpc_userptr, rpc_dspace_fd, rpc_offset, rpc_buf, rpc_count);
     }
 
-    return -EFILENOTFOUND;
+    return -REFOS_EFILENOTFOUND;
 }
 
 int
 data_getc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_block)
 {
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_expand_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_size)
 {
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_putc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_c)
 {
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 off_t
@@ -135,14 +135,14 @@ data_datamap_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr rpc
                      uint32_t rpc_offset)
 {
     assert(!"data_datamap_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_dataunmap_handler(void *rpc_userptr , seL4_CPtr rpc_memoryWindow)
 {
     assert(!"data_dataunmap_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -150,7 +150,7 @@ data_init_data_handler(void *rpc_userptr , seL4_CPtr rpc_destDataspace , seL4_CP
                        uint32_t rpc_srcDataspaceOffset)
 {
     assert(!"data_init_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -158,14 +158,14 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
                        uint32_t* rpc_dataID)
 {
     assert(!"data_have_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_unhave_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
 {
     assert(!"data_unhave_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -173,7 +173,7 @@ data_provide_data_from_parambuffer_handler(void *rpc_userptr , seL4_CPtr rpc_dsp
                                            uint32_t rpc_offset , uint32_t rpc_contentSize)
 {
     assert(!"data_provide_data_from_parambuffer_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 int

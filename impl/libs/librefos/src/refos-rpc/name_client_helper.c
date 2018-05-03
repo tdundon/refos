@@ -63,7 +63,7 @@ nsv_resolve(char* path)
     memset(&ret, 0, sizeof(nsv_mountpoint_t));
 
     if (!path) {
-        REFOS_SET_ERRNO(EINVALIDPARAM);
+        REFOS_SET_ERRNO(REFOS_EINVALIDPARAM);
         return ret;
     }
 
@@ -87,7 +87,7 @@ nsv_resolve(char* path)
             ret.nameservRoot = REFOS_NAMESERV_EP;
             strcpy(ret.dspaceName, cpath);
             strncpy(ret.nameservPathPrefix, path, cpath - path);
-            REFOS_SET_ERRNO(ESUCCESS);
+            REFOS_SET_ERRNO(REFOS_ESUCCESS);
             return ret;
         }
 
@@ -101,7 +101,7 @@ nsv_resolve(char* path)
         /* Was resolve invalid? */
         if (resolvedBytes == 0) {
             ret.success = false;
-            REFOS_SET_ERRNO(ESERVERNOTFOUND);
+            REFOS_SET_ERRNO(REFOS_ESERVERNOTFOUND);
             return ret;
         }
 

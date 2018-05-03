@@ -70,7 +70,7 @@ void nameserv_release(nameserv_state_t *n);
     @param n The nameserver list to add to.
     @param name NULL-terminated string of server name.
     @param anonEP The anonymous endpoint of given server.
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
 */
 int nameserv_add(nameserv_state_t *n, const char* name, seL4_CPtr anonEP);
 

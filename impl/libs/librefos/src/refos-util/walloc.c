@@ -89,7 +89,7 @@ walloc_list_ext(walloc_state_t *ws, int npages, seL4_CPtr *window, uint32_t perm
     // Allocate a window at this address.
     seL4_CPtr windowCap = proc_create_mem_window_ext(regionAddr, npages * REFOS_PAGE_SIZE,
             permission, flags);
-    if (windowCap == 0 || REFOS_GET_ERRNO() != ESUCCESS) {
+    if (windowCap == 0 || REFOS_GET_ERRNO() != REFOS_ESUCCESS) {
         cbpool_free(&ws->pool, startPage, npages);
         printf("WARNING: walloc could not create memory window.\n");
         assert(!"WARNING: walloc could not create procserv memory window.\n");

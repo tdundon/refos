@@ -23,13 +23,13 @@
         to be able to find this server and to connect to it. The anon cap will be given to clients
         looking for this server, and the client will make its connection call through the anon cap
         to establish a session.
- 
+
         Re-registering will replace the current server anon cap.
 
         @param nameserv The name server to register onto.
         @param name String containing name to register under. (No ownership)
         @param ep The anonymous endpoint cap to register with.
-        @return ESUCCESS on success, refos_err_t error code otherwise.
+        @return REFOS_ESUCCESS on success, refos_err_t error code otherwise.
 
         <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
         <param type="char*" name="name"/>
@@ -44,7 +44,7 @@
 
         @param nameserv The name server to unregister from.
         @param name String containing name to unregister for.
-        @return ESUCCESS on success, refos_err_t error code otherwise.
+        @return REFOS_ESUCCESS on success, refos_err_t error code otherwise.
 
         <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
         <param type="char*" name="name"/>

@@ -18,7 +18,7 @@
     from a page entry is computationally expensive as it requires mapping the frame, copying the
     data out and then unmapping the frame, the MCRingBuffer algorithm is used here to minimise the
     frequency of read / writes to the shared control variables.
-    
+
     Reference:
 
     > P.P.C. Lee, T. Bu,  and G.P. Chandranmenon,  A lock-free, cache-efficient shared ring buffer
@@ -65,13 +65,13 @@ struct rb_buffer {
 };
 
 /*! @brief Creates a ring buffer structure operating on the given dataspace.
-    
+
     Creates a ring buffer structure operating on the given dataspace. This assumes a shared
     ownership of the given dataspace, and keeps a strong reference to it.
 
     @param dataspace The dataspace to wrap a ring buffer interface on. (Shared ownership)
     @param mode Either RB_READONLY or RB_WRITEONLY.
-    @return An empty ring buffer on success (Passes ownership), NULL otherwise. 
+    @return An empty ring buffer on success (Passes ownership), NULL otherwise.
  */
 struct rb_buffer *rb_create(struct ram_dspace *dataspace, enum rb_mode mode);
 
@@ -84,7 +84,7 @@ void rb_delete(struct rb_buffer *rb);
     @param buf Destination ring buffer to write to. (No ownership)
     @param str Source buffer to read from in bytes. (No ownership)
     @param len Size of source buffer containing data.
-    @return ESUCCESS if success, ENOMEM if ring buffer is full, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, ENOMEM if ring buffer is full, refos_error otherwise.
  */
 int rb_write(struct rb_buffer *buf, char *str, size_t len);
 
@@ -93,7 +93,7 @@ int rb_write(struct rb_buffer *buf, char *str, size_t len);
     @param dest Destination buffer to read to. (No ownership)
     @param len Maximum length of data to read in bytes.
     @param bytesRead How many bytes were read into the destination buffer. (No ownership)
-    @return ESUCCESS if success, refos_error otherwise.
+    @return REFOS_ESUCCESS if success, refos_error otherwise.
  */
 int rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead);
 

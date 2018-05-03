@@ -34,30 +34,30 @@ nsv_register_handler(void *rpc_userptr , char* rpc_name , seL4_CPtr rpc_ep) {
 
     if (!check_dispatch_caps(m, 0x00000000, 1)) {
         ROS_ERROR("nsv_register cap is not transferred properly.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Register the new server into the server list. */
     if (!rpc_name) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Copy out the anonymous cap. */
     seL4_CPtr anonCap = dispatcher_copyout_cptr(rpc_ep);
     if (!anonCap) {
         dvprintf("could not copy out anonCap.");
-        return ENOMEM; 
+        return REFOS_ENOMEM;
     }
 
     /* Register the server under given name. */
     int error = nameserv_add(&procServ.nameServRegList, rpc_name, anonCap);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_ERROR("failed to register server.\n");
         dispatcher_release_copyout_cptr(anonCap);
         return error;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t
@@ -69,11 +69,11 @@ nsv_unregister_handler(void *rpc_userptr , char* rpc_name)
 
     dprintf("Process server name unregister! D:\n");
     if (!rpc_name) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     nameserv_delete(&procServ.nameServRegList, rpc_name);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 seL4_CPtr
@@ -86,7 +86,7 @@ nsv_resolve_segment_internal_handler(void *rpc_userptr , char* rpc_path , int* r
 
     /* Quick check that the path actually exists. */
     if (!rpc_path) {
-        SET_ERRNO_PTR(rpc_errno, EINVALIDPARAM);
+        SET_ERRNO_PTR(rpc_errno, REFOS_EINVALIDPARAM);
         return 0;
     }
 
@@ -97,7 +97,7 @@ nsv_resolve_segment_internal_handler(void *rpc_userptr , char* rpc_path , int* r
     if (rpc_resolvedBytes) {
         (*rpc_resolvedBytes) = resolvedBytes;
     }
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     return anonCap;
 }
 

@@ -38,10 +38,10 @@ srv_ctable_connect_direct_handler(srv_common_t *srv, srv_msg_t *m,
 
     /* Check that the liveness cap passed in correctly. */
     if(!srv_check_dispatch_caps(m, 0x00000000, 1)) {
-        SET_ERRNO_PTR(_errno, EINVALIDPARAM);
+        SET_ERRNO_PTR(_errno, REFOS_EINVALIDPARAM);
         return NULL;
     }
-    int error = ENOMEM;
+    int error = REFOS_ENOMEM;
 
     /* Copyout the liveness cap, create session cap cslot. Do not printf before the copyout. */
     seL4_CPtr livenessCP = rpc_copyout_cptr(liveness);
@@ -60,11 +60,11 @@ srv_ctable_connect_direct_handler(srv_common_t *srv, srv_msg_t *m,
 
     /* Authenticate the client to the process server, using its liveness cap. */
     error = proc_watch_client(c->liveness, srv->notifyClientFaultDeathAsyncEP, &c->deathID);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         goto error2;
     }
 
-    SET_ERRNO_PTR(_errno, ESUCCESS);
+    SET_ERRNO_PTR(_errno, REFOS_ESUCCESS);
     return c;
 
     /* Exit stack. */
@@ -94,15 +94,15 @@ srv_ctable_set_param_buffer_handler(srv_common_t *srv, struct srv_client *c,
         csfree(c->paramBuffer);
         c->paramBuffer = 0;
         c->paramBufferSize = 0;
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
  
     /* Sanity check parameters. */
     if (!srv_check_dispatch_caps(m, 0x00000000, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     if (parambufferSize == 0) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Set the parameter buffer by copying out the given dspace cap.
@@ -110,12 +110,12 @@ srv_ctable_set_param_buffer_handler(srv_common_t *srv, struct srv_client *c,
     c->paramBuffer = rpc_copyout_cptr(parambufferDataspace);
     if (!c->paramBuffer) {
         ROS_ERROR("Failed to copyout the cap.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     c->paramBufferSize = parambufferSize;
     dprintf("Set param buffer for client cID = %d...\n", c->cID);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
 }
 
@@ -144,7 +144,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
     s->anonEP = proc_new_endpoint();
     if (!s->anonEP) {
         ROS_ERROR("srv_common_init could not create endpoint for %s.", config.serverName);
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Create async EP. */
@@ -152,7 +152,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
     s->notifyAsyncEP = proc_new_async_endpoint();
     if (!s->notifyAsyncEP) {
         ROS_ERROR("srv_common_init could not create async endpoint.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Mint badged async EP. */
@@ -160,7 +160,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
     s->notifyClientFaultDeathAsyncEP = srv_mint(config.faultDeathNotifyBadge, s->notifyAsyncEP);
     if (!s->notifyClientFaultDeathAsyncEP) {
         ROS_ERROR("srv_common_init could not create minted async endpoint.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Bind the notification AEP. */
@@ -168,14 +168,14 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
     int error = seL4_TCB_BindNotification(REFOS_THREAD_TCB, s->notifyAsyncEP);
     if (error != seL4_NoError) {
         ROS_ERROR("srv_common_init could not bind async endpoint.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Register ourselves under our mountpoint name. */
     if (config.mountPointPath != NULL) {
         dprintf("    registering under the mountpoint [%s]...\n", config.mountPointPath);
         error = nsv_register(config.nameServEP, config.mountPointPath, s->anonEP);
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             ROS_ERROR("srv_common_init could not register anon ep.");
             return error;
         }
@@ -200,7 +200,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
         dprintf("    initialising notification buffer for %s...\n", config.serverName);
         s->notifyBuffer = data_open_map(REFOS_PROCSERV_EP, "anon", 0, 0,
                                         config.notificationBufferSize, -1);
-        if (s->notifyBuffer.err != ESUCCESS) {
+        if (s->notifyBuffer.err != REFOS_ESUCCESS) {
             ROS_ERROR("srv_common_init failed to open & map anon dspace for notifications.");
             return s->notifyBuffer.err;
         }
@@ -208,7 +208,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
         /* Share and set the notification buffer on the procserv side. */
         assert(s->notifyBuffer.dataspace);
         error = proc_notification_buffer(s->notifyBuffer.dataspace);
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             ROS_ERROR("srv_common_init failed to set notification buffer.");
             return error;
         }
@@ -222,19 +222,19 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
         dprintf("    initialising procserv param buffer for %s...\n", config.serverName);
         s->procServParamBuffer = data_open_map(REFOS_PROCSERV_EP, "anon", 0, 0,
                                                config.paramBufferSize, -1);
-        if (s->procServParamBuffer.err != ESUCCESS) {
+        if (s->procServParamBuffer.err != REFOS_ESUCCESS) {
             ROS_ERROR("srv_common_init failed to open & map anon dspace for param buffer.");
             return s->procServParamBuffer.err;
         }
         error = proc_set_parambuffer(s->procServParamBuffer.dataspace, config.paramBufferSize);
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             ROS_ERROR("srv_common_init failed to set procserv param buffer.");
             return error;
         }
     }
 
     s->magic = SRV_MAGIC;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 seL4_CPtr

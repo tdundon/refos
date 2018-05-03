@@ -95,7 +95,7 @@ extern struct procserv_state procServ;
 uint32_t faketime();
 
 /*! @brief Initialises the process server.
-    
+
     High-level initialisation function which calls the other initialisation functions and starts the
     process server up and running to the point where it is ready to dispatch all messages, and is
     able to start processes.
@@ -119,14 +119,14 @@ void initialise(seL4_BootInfo *info, struct procserv_state *s);
 cspacepath_t procserv_mint_badge(int badge);
 
 /*! @brief Temporary map a page frame and write data to it.
-    
-    In order to read / write data to / from a 
+
+    In order to read / write data to / from a
 
     @param frame CPtr to destination frame.
     @param src Data source buffer.
     @param len Data source buffer length.
     @param offset Offset into frame to write to.
-    @return ESUCCESS if write successful, refos error otherwise.
+    @return REFOS_ESUCCESS if write successful, refos error otherwise.
 */
 int procserv_frame_write(seL4_CPtr frame, const char* src, size_t len, size_t offset);
 
@@ -135,7 +135,7 @@ int procserv_frame_write(seL4_CPtr frame, const char* src, size_t len, size_t of
     @param dst Data destination buffer.
     @param len Data destination buffer max length.
     @param offset Offset into frame to read from.
-    @return ESUCCESS if read successful, refos error otherwise.
+    @return REFOS_ESUCCESS if read successful, refos error otherwise.
 */
 int procserv_frame_read(seL4_CPtr frame, const char* dst, size_t len, size_t offset);
 

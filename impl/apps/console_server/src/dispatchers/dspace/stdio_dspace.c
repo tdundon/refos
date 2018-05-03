@@ -32,7 +32,7 @@ serial_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc
 {
     /* Return the serial dataspace badged EP. */
     assert(conServ.serialBadgeEP);
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     return conServ.serialBadgeEP;
 }
 
@@ -61,7 +61,7 @@ serial_getc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_block)
         if (rpc_block) {
             c->rpcClient.skip_reply = true;
             int error = input_save_caller_as_waiter(&conServ.devInput, c, INPUT_WAITERTYPE_GETC);
-            if (error != ESUCCESS) {
+            if (error != REFOS_ESUCCESS) {
                 ROS_ERROR("Could not save caller.");
             }
             return -1;
@@ -78,5 +78,5 @@ serial_putc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_c)
 {
     assert(rpc_dspace_fd == CONSERV_DSPACE_BADGE_STDIO);
     ps_cdev_putchar(&conServ.devSerial, rpc_c);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }

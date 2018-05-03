@@ -85,7 +85,7 @@ proc_ping_handler(void *rpc_userptr) {
     (void) m;
 
     dprintf(COLOUR_G "PROCESS SERVER RECIEVED PING!!! HELLO THERE! (´・ω・)っ由" COLOUR_RESET "\n");
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Handles sync endpoint creation syscalls. */
@@ -97,10 +97,10 @@ proc_new_endpoint_internal_handler(void *rpc_userptr , refos_err_t* rpc_errno)
     dprintf("Process server creating endpoint!\n");
     seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_ENDPOINT);
     if (!ep) {
-        SET_ERRNO_PTR(rpc_errno, ENOMEM);
+        SET_ERRNO_PTR(rpc_errno, REFOS_ENOMEM);
         return 0;
     }
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     return ep;
 }
 
@@ -113,10 +113,10 @@ proc_new_async_endpoint_internal_handler(void *rpc_userptr , refos_err_t* rpc_er
     dprintf("Process server creating async endpoint!\n");
     seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_NOTIFICATION);
     if (!ep) {
-        SET_ERRNO_PTR(rpc_errno, ENOMEM);
+        SET_ERRNO_PTR(rpc_errno, REFOS_ENOMEM);
         return 0;
     }
-    SET_ERRNO_PTR(rpc_errno, ESUCCESS);
+    SET_ERRNO_PTR(rpc_errno, REFOS_ESUCCESS);
     return ep;
 }
 
@@ -134,19 +134,19 @@ proc_watch_client_handler(void *rpc_userptr , seL4_CPtr rpc_liveness , seL4_CPtr
     assert(pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000001, 2)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve the corresponding client's ASID unwrapped from its liveness cap. */
     if (!dispatcher_badge_liveness(rpc_liveness)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
-    
+
     /* Verify the corresponding client. */
     struct proc_pcb *client = pid_get_pcb(&procServ.PIDList,
                                           rpc_liveness - PID_LIVENESS_BADGE_BASE);
     if (!client) {
-        return EINVALIDPARAM; 
+        return REFOS_EINVALIDPARAM;
     }
     assert(client->magic == REFOS_PCB_MAGIC);
 
@@ -154,7 +154,7 @@ proc_watch_client_handler(void *rpc_userptr , seL4_CPtr rpc_liveness , seL4_CPtr
     seL4_CPtr deathNotifyEP = dispatcher_copyout_cptr(rpc_deathEP);
     if (!deathNotifyEP) {
         ROS_ERROR("could not copy out deathNotifyEP.");
-        return ENOMEM; 
+        return REFOS_ENOMEM;
     }
 
     /* Add the new client to the watch list of the calling process. */
@@ -168,38 +168,38 @@ proc_watch_client_handler(void *rpc_userptr , seL4_CPtr rpc_liveness , seL4_CPtr
         (*rpc_deathID) = client->pid;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 
 /*! @brief Handles client un-watching syscalls. */
 refos_err_t
-proc_unwatch_client_handler(void *rpc_userptr , seL4_CPtr rpc_liveness) 
+proc_unwatch_client_handler(void *rpc_userptr , seL4_CPtr rpc_liveness)
 {
     struct proc_pcb *pcb = (struct proc_pcb*) rpc_userptr;
     struct procserv_msg *m = (struct procserv_msg*) pcb->rpcClient.userptr;
     assert(pcb->magic == REFOS_PCB_MAGIC);
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve the corresponding client's ASID unwrapped from its liveness cap. */
     if (!dispatcher_badge_liveness(rpc_liveness)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
-    
+
     /* Verify the corresponding client. */
     struct proc_pcb *client = pid_get_pcb(&procServ.PIDList,
                                           rpc_liveness - PID_LIVENESS_BADGE_BASE);
     if (!client) {
-        return EINVALIDPARAM; 
+        return REFOS_EINVALIDPARAM;
     }
     assert(client->magic == REFOS_PCB_MAGIC);
 
     /* Remove the given client PID from the watch list. */
     client_unwatch(&pcb->clientWatchList, client->pid);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Sets the process's parameter buffer.
@@ -219,28 +219,28 @@ proc_set_parambuffer_handler(void *rpc_userptr , seL4_CPtr rpc_dataspace , uint3
     /* Special case zero size and NULL parameter buffer - means unset the parameter buffer. */
     if (rpc_size == 0 && rpc_dataspace == 0) {
         proc_set_parambuffer(pcb, NULL);
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     if (!check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Check if the given badge is a RAM dataspace. */
     if (!dispatcher_badge_dspace(rpc_dataspace)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve RAM dataspace structure. */
     dataspace = ram_dspace_get_badge(&procServ.dspaceList, rpc_dataspace);
     if (!dataspace) {
         dvprintf("No such dataspace!.\n");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Set new parameter buffer. */
     proc_set_parambuffer(pcb, dataspace);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 
@@ -251,14 +251,14 @@ proc_new_proc_handler(void *rpc_userptr , char* rpc_name , char* rpc_params , bo
 {
     struct proc_pcb *pcb = (struct proc_pcb*) rpc_userptr;
     assert(pcb->magic == REFOS_PCB_MAGIC);
-    
+
     if (!rpc_name) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Kick off an instance of selfloader, which will do the actual process loading work. */
     int error = proc_load_direct("selfloader", rpc_priority, rpc_name, pcb->pid, 0x0);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_WARNING("failed to run selfloader for new process [%s].", rpc_name);
         return error;
     }
@@ -269,11 +269,11 @@ proc_new_proc_handler(void *rpc_userptr , char* rpc_name , char* rpc_params , bo
         proc_save_caller(pcb);
         pcb->parentWaiting = true;
         pcb->rpcClient.skip_reply = true;
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Immediately resume the parent process. */
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief Exits and deletes the process which made this call. */
@@ -286,7 +286,7 @@ proc_exit_handler(void *rpc_userptr , int32_t rpc_status)
     pcb->exitStatus = rpc_status;
     pcb->rpcClient.skip_reply = true;
     proc_queue_release(pcb);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int

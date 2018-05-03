@@ -68,12 +68,12 @@ enum srv_dispatch_return_code_enum {
 
     This structure stores the server's configuration, including things like name to register under,
     badge layouts, number of max clients, and so forth. Servers wishing to use this library should
-    fill this config structure with their configuration parameters then pass this into 
+    fill this config structure with their configuration parameters then pass this into
     srv_common_init().
 */
 typedef struct srv_common_config {
     /*! @brief Maximum number of clients in the client table. Set to 0 to disable. */
-    int maxClients; 
+    int maxClients;
     uint32_t clientBadgeBase; /*!< @brief Client badge number base. */
     uint32_t clientMagic; /*!< @brief Client structure magic number identifier. */
 
@@ -139,7 +139,7 @@ typedef struct srv_common_notify_handler_callbacks {
 /*! @brief Initialise server common state.
     @param s The common server state structure to initialise.
     @param config The  structure containing info on server configuration.
-    @return ESUCCESS on success, refos_err_t error otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t error otherwise.
 */
 int srv_common_init(srv_common_t *s, srv_common_config_t config);
 
@@ -170,7 +170,7 @@ bool srv_check_dispatch_caps(srv_msg_t *m, seL4_Word unwrappedMask, int numExtra
     @param callbacks Struct containing callbacks, one for each possible type of notification.
                      If the given server does not handle a certain type of notification, simply
                      set the corresponding callback as NULL.
-    @return ESUCCESS on success, refos_err_t error otherwise.       
+    @return REFOS_ESUCCESS on success, refos_err_t error otherwise.
 */
 int srv_dispatch_notification(srv_common_t *srv, srv_common_notify_handler_callbacks_t callbacks);
 

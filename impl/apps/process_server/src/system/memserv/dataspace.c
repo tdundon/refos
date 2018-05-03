@@ -24,7 +24,7 @@ extern seL4_MessageInfo_t _dispatcherEmptyReply;
 /* --------------------------- RAM dataspace OAT callback functions ----------------------------- */
 
 /*! @brief Dataspace OAT creation callback function.
-    
+
     This callback function is called by the OAT allocation helper library in <data_struct/coat.h>,
     in order to create dataspace objects. Here we malloc some memory for the structure, initialise
     its data structures, initialise its page array, and mint the dataspace badge capability.
@@ -83,10 +83,10 @@ exit1:
 }
 
 /*! @brief Dataspace OAT deletion callback function.
-    
+
     This callback function is called by the OAT library defined in <data_struct/coat.h>, in order
     to delete dataspace objects created by ram_dspace_oat_create(). It unmaps the dataspace from
-    all mapped windows, frees the caps, cslots, frames & frame arrays, and then the structure 
+    all mapped windows, frees the caps, cslots, frames & frame arrays, and then the structure
     itself.
 
     @param oat The parent dataspace list (struct ram_dspace_list*).
@@ -98,7 +98,7 @@ ram_dspace_oat_delete(coat_t *oat, cvector_item_t *obj)
     struct ram_dspace *rds = (struct ram_dspace *) obj;
     assert(rds);
     assert(rds->magic == RAM_DATASPACE_MAGIC);
-    
+
     /* Unmap everywhere where this dataspace has been mapped, by notifying the global procServ
        window list that this dataspace has been deleted. This will loop through the windowList,
        find any windows associated with this dspace, and unmap it and set back to EMPTY.
@@ -264,7 +264,7 @@ ram_dspace_unref(struct ram_dspace_list *rdslist, int ID)
         coat_free(&rdslist->allocTable, ID);
     }
 }
-      
+
 seL4_CPtr
 ram_dspace_check_page(struct ram_dspace *dataspace, uint32_t offset)
 {
@@ -345,10 +345,10 @@ ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size)
 
     if (npages < dataspace->npages) {
         /* Contraction not supported. */
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     } else if (npages == dataspace->npages) {
         /* Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
     uint32_t nbitmaskPrev = (dataspace->npages / 32) + 1;
 
@@ -356,7 +356,7 @@ ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size)
     dataspace->pages = krealloc(dataspace->pages, sizeof(vka_object_t) * npages);
     if (!dataspace->pages) {
         ROS_ERROR("ram_dspace_expand could not reallocate page array, procserv out of mem!");
-        return ENOMEM; /* Easier to not clean up, leave extra bit of mem. */
+        return REFOS_ENOMEM; /* Easier to not clean up, leave extra bit of mem. */
     }
     uint32_t pageDiff = npages - dataspace->npages;
     assert(pageDiff);
@@ -370,7 +370,7 @@ ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size)
         );
         if (!dataspace->contentInitBitmask) {
             ROS_ERROR("ram_dspace_expand failed to realloc content init bitmask. Procserv OOM.");
-            return ENOMEM; /* Easier to not clean up, leave extra bit of mem. */
+            return REFOS_ENOMEM; /* Easier to not clean up, leave extra bit of mem. */
         }
         uint32_t bitmaskDiff = nbitmask - nbitmaskPrev;
         assert(bitmaskDiff > 0);
@@ -378,7 +378,7 @@ ram_dspace_expand(struct ram_dspace *dataspace, uint32_t size)
     }
 
     dataspace->npages = npages;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -387,11 +387,11 @@ ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr)
     /* Check that the dataspace isn't already occupied with something. */
     if (dataspace->contentInitEnabled) {
         ROS_WARNING("Dataspace is already content init enabled, cannot set to physaddr mode.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     if (dataspace->physicalAddrEnabled) {
         ROS_WARNING("Dataspace is already set to physaddr mode.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Check that the dataspace is empty. */
@@ -399,7 +399,7 @@ ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr)
     for (int i = 0; i < dataspace->npages; i++) {
         if (dataspace->pages[i].cptr) {
             ROS_WARNING("Dataspace already has mapped anonymous content.");
-            return EINVALID;
+            return REFOS_EINVALID;
         }
     }
 
@@ -408,7 +408,7 @@ ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr)
     cspacepath_t deviceFrame = procserv_find_device((void*) paddr, REFOS_PAGE_SIZE);
     if (!deviceFrame.capPtr) {
         ROS_WARNING("No such device 0x%x.", paddr);
-        return EFILENOTFOUND;
+        return REFOS_EFILENOTFOUND;
     }
     vka_cnode_delete(&deviceFrame);
     vka_cspace_free(&procServ.vka, deviceFrame.capPtr);
@@ -416,7 +416,7 @@ ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr)
     dprintf("procserv_find_device OK...\n");
     dataspace->physicalAddrEnabled = true;
     dataspace->physicalAddr = paddr;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /* --------------------------- RAM dataspace read / write functions ----------------------------- */
@@ -434,7 +434,7 @@ ram_dspace_set_to_paddr(struct ram_dspace *dataspace, uint32_t paddr)
     @param len The length of the data to be copied.
     @param dataspace The source ram dataspace. (No ownership)
     @param offset The offset into the dataspace to read from.
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
  */
 int
 ram_dspace_read_page(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t offset)
@@ -447,7 +447,7 @@ ram_dspace_read_page(char *buf, size_t len, struct ram_dspace *dataspace, uint32
     seL4_CPtr frame = ram_dspace_get_page(dataspace, offset);
     if (!frame) {
         ROS_ERROR("ram_dspace_read_page failed to allocate page. Procserv out of memory.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     return procserv_frame_read(frame, buf, len, skipBytes);
 }
@@ -465,7 +465,7 @@ ram_dspace_read_page(char *buf, size_t len, struct ram_dspace *dataspace, uint32
     @param len The length of the data to be written.
     @param dataspace The destination dataspace to be written to. (No ownership)
     @param offset The offset into the dataspace to write to.
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
  */
 int
 ram_dspace_write_page(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t offset)
@@ -478,7 +478,7 @@ ram_dspace_write_page(char *buf, size_t len, struct ram_dspace *dataspace, uint3
     seL4_CPtr frame = ram_dspace_get_page(dataspace, offset);
     if (!frame) {
         ROS_ERROR("ram_dataspace_write_page failed to allocate page. Procserv out of memory.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     return procserv_frame_write(frame, buf, len, skipBytes);
 }
@@ -492,7 +492,7 @@ ram_dspace_read(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t of
 
     /* Check if the read length runs off the end of the dataspace. */
     if (len > ((dataspace->npages * REFOS_PAGE_SIZE) - offset)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     while (start < offset + len) {
@@ -511,7 +511,7 @@ ram_dspace_read(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t of
         bufOffset += end - start;
         start = end;
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -523,7 +523,7 @@ ram_dspace_write(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t o
 
     /* Check if the write length runs off the end of the dataspace. */
     if (len > ((dataspace->npages * REFOS_PAGE_SIZE) - offset)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     while (start < offset + len) {
@@ -543,7 +543,7 @@ ram_dspace_write(char *buf, size_t len, struct ram_dspace *dataspace, uint32_t o
         start = end;
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /* --------------------------- RAM dataspace content init functions ----------------------------- */
@@ -556,7 +556,7 @@ ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, uint3
     /* We can't content init a dataspace that is physical address bound. */
     if (dataspace->physicalAddrEnabled) {
         ROS_WARNING("Can't content init a dataspace that is physical address bound.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Free any previous content initialised bitmasks. */
@@ -578,7 +578,7 @@ ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, uint3
     if (initEP.capPtr == 0) {
         dataspace->contentInitEnabled = false;
         dataspace->contentInitPID = PID_NULL;
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Allocate bitmask. */
@@ -586,7 +586,7 @@ ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, uint3
     dataspace->contentInitBitmask = kmalloc(nbitmask * sizeof(uint32_t));
     if (!dataspace->contentInitBitmask) {
         ROS_ERROR("ram_dspace_content_init failed to malloc content init bitmask. Procserv OOM.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     memset(dataspace->contentInitBitmask, 0, nbitmask * sizeof(uint32_t));
 
@@ -610,7 +610,7 @@ ram_dspace_content_init(struct ram_dspace *dataspace, cspacepath_t initEP, uint3
     dataspace->contentInitEP = initEP;
     dataspace->contentInitEnabled = true;
     dataspace->contentInitPID = initPID;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -619,10 +619,10 @@ ram_dspace_need_content_init(struct ram_dspace *dataspace, uint32_t offset)
     assert(dataspace && dataspace->magic == RAM_DATASPACE_MAGIC);
 
     if (!dataspace->contentInitEnabled || !dataspace->contentInitBitmask) {
-        return -EINVALID;
+        return -REFOS_EINVALID;
     }
     if (offset > ram_dspace_get_size(dataspace)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     uint32_t npage = (offset / REFOS_PAGE_SIZE);
@@ -640,14 +640,14 @@ ram_dspace_add_content_init_waiter(struct ram_dspace *dataspace, uint32_t offset
     assert(dataspace && dataspace->magic == RAM_DATASPACE_MAGIC);
     if (!reply.capPtr) {
         ROS_WARNING("add_content_init_waiter: null cap given. Nothing to do.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     if (offset > ram_dspace_get_size(dataspace)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     if (!dataspace->contentInitEnabled) {
         dvprintf("add_content_init_waiter: content init not enabled.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     uint32_t npage = (offset / REFOS_PAGE_SIZE);
     assert(npage < dataspace->npages);
@@ -656,7 +656,7 @@ ram_dspace_add_content_init_waiter(struct ram_dspace *dataspace, uint32_t offset
     struct ram_dspace_waiter* waiter = kmalloc(sizeof(struct ram_dspace_waiter));
     if (!waiter) {
         ROS_ERROR("add_content_init_waiter could not malloc waiter struct. Procserv OOM.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Fill out the waiter structure and add to waiting list. */
@@ -664,7 +664,7 @@ ram_dspace_add_content_init_waiter(struct ram_dspace *dataspace, uint32_t offset
     waiter->pageidx = npage;
     waiter->reply = reply;
     cvector_add(&dataspace->contentInitWaitingList, (cvector_item_t) waiter);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -676,7 +676,7 @@ ram_dspace_add_content_init_waiter_save_current_caller(struct ram_dspace *datasp
     int error = vka_cspace_alloc_path(&procServ.vka, &callerReply);
     if (error != seL4_NoError) {
         ROS_ERROR("Could not allocate path to save caller. PRocserv outof cslots.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     assert(callerReply.capPtr);
 
@@ -684,7 +684,7 @@ ram_dspace_add_content_init_waiter_save_current_caller(struct ram_dspace *datasp
     error = vka_cnode_saveCaller(&callerReply);
     if (error != seL4_NoError) {
         ROS_ERROR("Could not copy out reply cap.");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Add reply cap as waiter (takes ownership of the cap) */

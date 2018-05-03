@@ -28,7 +28,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
                   int* rpc_errno)
 {
     if (!rpc_name) {
-        SET_ERRNO_PTR(rpc_errno, EFILENOTFOUND);
+        SET_ERRNO_PTR(rpc_errno, REFOS_EFILENOTFOUND);
         return 0;
     }
 
@@ -42,7 +42,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
         return screen_open_handler(rpc_userptr, rpc_name, rpc_flags, rpc_mode, rpc_size, rpc_errno);
     }
 
-    SET_ERRNO_PTR(rpc_errno, EFILENOTFOUND);
+    SET_ERRNO_PTR(rpc_errno, REFOS_EFILENOTFOUND);
     return 0;
 }
 
@@ -55,20 +55,20 @@ data_close_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
            c->magic == CONSERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* No need to close stdio / serial dataspaces. */
     if (rpc_dspace_fd == CONSERV_DSPACE_BADGE_STDIO) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* No need to close screen dataspaces. */
     if (rpc_dspace_fd == CONSERV_DSPACE_BADGE_SCREEN) {
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
-    return EFILENOTFOUND;
+    return REFOS_EFILENOTFOUND;
 }
 
 int
@@ -80,20 +80,20 @@ data_read_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_off
     assert(c && (c->magic == CONSERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == CONSERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     /* Handle read from stdio / serial dataspaces. */
     if (rpc_dspace_fd == CONSERV_DSPACE_BADGE_STDIO) {
-        return -EACCESSDENIED;
+        return -REFOS_EACCESSDENIED;
     }
 
     /* Handle read from screen dataspaces. */
     if (rpc_dspace_fd == CONSERV_DSPACE_BADGE_SCREEN) {
-        return -EACCESSDENIED;
+        return -REFOS_EACCESSDENIED;
     }
 
-    return -EFILENOTFOUND;
+    return -REFOS_EFILENOTFOUND;
 }
 
 int
@@ -105,7 +105,7 @@ data_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_of
     assert(c && (c->magic == CONSERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == CONSERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return -EINVALIDPARAM;
+        return -REFOS_EINVALIDPARAM;
     }
 
     /* Handle write to stdio / serial dataspaces. */
@@ -118,7 +118,7 @@ data_write_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_of
         return screen_write_handler(rpc_userptr, rpc_dspace_fd, rpc_offset, rpc_buf, rpc_count);
     }
 
-    return -EFILENOTFOUND;
+    return -REFOS_EFILENOTFOUND;
 }
 
 int
@@ -150,7 +150,7 @@ data_getc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_block)
 refos_err_t
 data_expand_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , uint32_t rpc_size)
 {
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -161,7 +161,7 @@ data_putc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_c)
     assert(c && (c->magic == CONSERV_DISPATCH_ANON_CLIENT_MAGIC || c->magic == CONSERV_CLIENT_MAGIC));
 
     if (!srv_check_dispatch_caps(m, 0x00000001, 1)) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Handle close stdio / serial dataspaces. */
@@ -174,7 +174,7 @@ data_putc_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , int rpc_c)
         return screen_putc_handler(rpc_userptr, rpc_dspace_fd, rpc_c);
     }
 
-    return EFILENOTFOUND;
+    return REFOS_EFILENOTFOUND;
 }
 
 off_t
@@ -195,14 +195,14 @@ data_datamap_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr rpc
                      uint32_t rpc_offset)
 {
     assert(!"data_datamap_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_dataunmap_handler(void *rpc_userptr , seL4_CPtr rpc_memoryWindow)
 {
     assert(!"data_dataunmap_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -210,7 +210,7 @@ data_init_data_handler(void *rpc_userptr , seL4_CPtr rpc_destDataspace , seL4_CP
                        uint32_t rpc_srcDataspaceOffset)
 {
     assert(!"data_init_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -218,14 +218,14 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
                        uint32_t* rpc_dataID)
 {
     assert(!"data_have_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
 data_unhave_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd)
 {
     assert(!"data_unhave_data_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -233,7 +233,7 @@ data_provide_data_from_parambuffer_handler(void *rpc_userptr , seL4_CPtr rpc_dsp
                                            uint32_t rpc_offset , uint32_t rpc_contentSize)
 {
     assert(!"data_provide_data_from_parambuffer_handler unimplemented.");
-    return EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 int
