@@ -40,14 +40,14 @@ test_file_server_connect()
     /* Attempt to ping the file server. */
     for (int i = 0; i < fs_test_repeat; i++) {
         int error = serv_ping(fileservAnon);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
     }
 
     /* Repeatedly connect to and disconnect from the file server. */
     for (int i = 0; i < fs_test_repeat; i++) {
         int error;
         seL4_CPtr fileservSession = serv_connect_direct(fileservAnon, REFOS_LIVENESS, &error);
-        test_assert(fileservSession && error == ESUCCESS);
+        test_assert(fileservSession && error == REFOS_ESUCCESS);
 
         if (fileservSession) {
             serv_disconnect_direct(fileservSession);
@@ -78,7 +78,7 @@ test_file_server_dataspace()
     seL4_CPtr fileservAnon = mp.serverAnon;
 
     seL4_CPtr fileservSession = serv_connect_direct(fileservAnon, REFOS_LIVENESS, &error);
-    test_assert(fileservSession && error == ESUCCESS);
+    test_assert(fileservSession && error == REFOS_ESUCCESS);
 
     /* Allocate a temporary window. */
     seL4_CPtr tempWindow = 0;
@@ -87,11 +87,11 @@ test_file_server_dataspace()
 
     /* Open a new dataspace on the fileserver to test with. */
     seL4_CPtr dspace = data_open(fileservSession, "hello.txt", 0, O_RDWR, 0, &error);
-    test_assert(dspace && error == ESUCCESS);
+    test_assert(dspace && error == REFOS_ESUCCESS);
 
     /* Test datamap. */
     error = data_datamap(fileservSession, dspace, tempWindow, 3);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     int scmp = strncmp((char*) tempWindowVaddr, "lo world!", 9);
     test_assert(scmp == 0);
 
@@ -102,11 +102,11 @@ test_file_server_dataspace()
 
     /* Open a new anon dataspace to init data on */
     seL4_CPtr anonDS = data_open(REFOS_PROCSERV_EP, "anon", 0, O_RDWR, 0x1000, &error);
-    test_assert(anonDS && error == ESUCCESS);
+    test_assert(anonDS && error == REFOS_ESUCCESS);
 
     /* Inititialise content of this anon dataspace with our fileserv CPIO dataspace. */
     error = data_init_data(fileservSession, anonDS, dspace , 3);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* Allocate another temporary window. */
     seL4_CPtr tempWindowAnon = 0;
@@ -115,7 +115,7 @@ test_file_server_dataspace()
 
     /* Datamap initialised anon dataspace. */
     error = data_datamap(REFOS_PROCSERV_EP, anonDS, tempWindowAnon, 0);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     scmp = strncmp((char*) tempWindowVaddrAnon, "lo world!", 9);
     test_assert(scmp == 0);
 
@@ -148,8 +148,8 @@ test_file_server_serv_connect()
     test_start("fs serv_connect");
     for (int i = 0; i < 5; i++) {
         serv_connection_t c = serv_connect("/fileserv/*");
-        test_assert(c.error == ESUCCESS);
-        test_assert(c.paramBuffer.err == ESUCCESS);
+        test_assert(c.error == REFOS_ESUCCESS);
+        test_assert(c.paramBuffer.err == REFOS_ESUCCESS);
         strcpy(c.paramBuffer.vaddr, "test");
         serv_disconnect(&c);
     }

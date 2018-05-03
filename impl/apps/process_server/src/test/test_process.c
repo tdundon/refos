@@ -123,13 +123,13 @@ test_thread(void)
     /* Create a vspace for threads to go into. */
     struct vs_vspace vs;
     int error = vs_initialise(&vs, 31337);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(vs.magic == REFOS_VSPACE_MAGIC);
 
     /* Create the threads. */
     for (int i = 0; i < numTestThreads; i++) {
         int error = thread_config(&thr[i], 12, 1337, &vs);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
         test_assert(thr[i].magic == REFOS_PROCESS_THREAD_MAGIC);
         test_assert(thr[i].priority == 12);
         test_assert(thr[i].vspaceRef == &vs);
@@ -190,7 +190,7 @@ test_proc_client_watch(void)
     /* Watch a bunch of test clients and dummy notify EPs. */
     for (int i = 0; i < 4; i++) {
         int error = client_watch(&wl, dummyPIDs[i], dummyEPMinted[i].capPtr);
-        test_assert(error == ESUCCESS);
+        test_assert(error == REFOS_ESUCCESS);
     }
 
     /* Test that getting an invalid PID results in a NULL CPtr. */

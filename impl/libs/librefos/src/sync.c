@@ -42,7 +42,7 @@ sync_create_mutex()
 
     /* Create the endpoint. */
     mutex->mapping = proc_new_async_endpoint_badged(SYNC_ASYNC_BADGE_MAGIC);
-    if (REFOS_GET_ERRNO() != ESUCCESS || mutex->mapping == 0) {
+    if (REFOS_GET_ERRNO() != REFOS_ESUCCESS || mutex->mapping == 0) {
         free(mutex);
         return NULL;
     }
@@ -52,7 +52,7 @@ sync_create_mutex()
     return mutex;
 }
 
-void 
+void
 sync_destroy_mutex(sync_mutex_t mutex)
 {
     proc_del_async_endpoint(mutex->mapping);

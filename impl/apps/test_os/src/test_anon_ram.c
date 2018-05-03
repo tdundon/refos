@@ -28,7 +28,7 @@ test_anon_dspace()
 
     /* Open an anonymous dataspace and map it entirely in our VSpace. */
     data_mapping_t anon = data_open_map(REFOS_PROCSERV_EP, "anon", 0x0, 0, 0x2000, -1);
-    test_assert(anon.err == ESUCCESS);
+    test_assert(anon.err == REFOS_ESUCCESS);
     test_assert(anon.size == 0x2000);
     test_assert(anon.sizeNPages == (0x2000 / REFOS_PAGE_SIZE));
     test_assert(anon.session == REFOS_PROCSERV_EP);
@@ -44,12 +44,12 @@ test_anon_dspace()
 
     /* Test resize. */
     int error = data_expand(REFOS_PROCSERV_EP, anon.dataspace, 0x3000);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(data_get_size(REFOS_PROCSERV_EP, anon.dataspace) == 0x3000);
 
     /* Clean up. */
     error = data_mapping_release(anon);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     return test_success();
 }
 

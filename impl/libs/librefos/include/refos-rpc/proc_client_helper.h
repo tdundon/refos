@@ -40,13 +40,13 @@ seL4_CPtr rpc_copyout_cptr(seL4_CPtr v);
 */
 static inline seL4_CPtr
 proc_new_endpoint(void) {
-    refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = REFOS_EINVALID;
     seL4_CPtr tcap = proc_new_endpoint_internal(&errnoRetVal);
-    if (errnoRetVal != ESUCCESS || tcap == 0) {
+    if (errnoRetVal != REFOS_ESUCCESS || tcap == 0) {
         REFOS_SET_ERRNO(errnoRetVal);
         return 0;
     }
-    REFOS_SET_ERRNO(ESUCCESS);
+    REFOS_SET_ERRNO(REFOS_ESUCCESS);
     return tcap;
 }
 
@@ -62,13 +62,13 @@ proc_del_endpoint(seL4_CPtr ep) {
 */
 static inline seL4_CPtr
 proc_new_async_endpoint(void) {
-    refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = REFOS_EINVALID;
     seL4_CPtr tcap = proc_new_async_endpoint_internal(&errnoRetVal);
-    if (errnoRetVal != ESUCCESS || tcap == 0) {
+    if (errnoRetVal != REFOS_ESUCCESS || tcap == 0) {
         REFOS_SET_ERRNO(errnoRetVal);
         return 0;
     }
-    REFOS_SET_ERRNO(ESUCCESS);
+    REFOS_SET_ERRNO(REFOS_ESUCCESS);
     return tcap;
 }
 
@@ -93,7 +93,7 @@ proc_new_async_endpoint_badged(int badge) {
     seL4_CPtr bgcap = csalloc();
     if (!bgcap) {
         proc_del_async_endpoint(tcap);
-        REFOS_SET_ERRNO(ENOMEM);
+        REFOS_SET_ERRNO(REFOS_ENOMEM);
         return 0;
     }
     /* Mint the badged cap. */
@@ -104,11 +104,11 @@ proc_new_async_endpoint_badged(int badge) {
     );
     if (error != seL4_NoError) {
         proc_del_async_endpoint(tcap);
-        REFOS_SET_ERRNO(EINVALID);
+        REFOS_SET_ERRNO(REFOS_EINVALID);
         return 0;
     }
     proc_del_async_endpoint(tcap);
-    REFOS_SET_ERRNO(ESUCCESS);
+    REFOS_SET_ERRNO(REFOS_ESUCCESS);
     return bgcap;
 }
 
@@ -123,13 +123,13 @@ proc_new_async_endpoint_badged(int badge) {
 static inline seL4_CPtr
 proc_create_mem_window_ext(uint32_t vaddr, uint32_t size, uint32_t permission, uint32_t flags)
 {
-    refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = REFOS_EINVALID;
     seL4_CPtr tcap = proc_create_mem_window_internal(vaddr, size, permission, flags, &errnoRetVal);
-    if (errnoRetVal != ESUCCESS || tcap == 0) {
+    if (errnoRetVal != REFOS_ESUCCESS || tcap == 0) {
         REFOS_SET_ERRNO(errnoRetVal);
         return 0;
     }
-    REFOS_SET_ERRNO(ESUCCESS);
+    REFOS_SET_ERRNO(REFOS_ESUCCESS);
     return tcap;
 }
 
@@ -157,7 +157,7 @@ static inline int
 proc_clone(int (*func)(void *), void *childStack, int flags, void *arg)
 {
     (void) flags;
-    refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = REFOS_EINVALID;
     int threadID = proc_clone_internal((seL4_Word) func, (seL4_Word) childStack, flags,
             (seL4_Word) arg, &errnoRetVal);
     REFOS_SET_ERRNO(errnoRetVal);

@@ -33,7 +33,7 @@
 */
 
 /*! @brief Handles client page fault notifications.
-    
+
     This function handles client page fault notifications from the process server. When we act as
     the pager, the process server delegates all page faults to us via this notification.
     We then choose a page to map, and map it.
@@ -106,22 +106,22 @@ handle_fileserver_fault(struct proc_notification *notification)
                                             ▼   ▼
                  |_______|_______|_______|__[―――◯|―――――――|―――――――]_______|_______|
                                          ▲  ◀――――― window ―――――――▶
-                          alignedFaultAddr  
+                          alignedFaultAddr
                                          ◀――▶ initFrameSkip = (winBase - alignedFaultAddr)
-        */ 
+        */
         size_t initFrameSkip = (winBase > alignedFaultAddr) ? (winBase - alignedFaultAddr) : 0;
 
         /* dataspaceSkipWinOffset is for all cases except the (unsigned window base addr &
            first page fault) special case. Illustration:
-           
+
                                       winBase                faultAddr
                                             ▼                ▼
                  |_______|_______|_______|__[――――|―――――――|―――◯―――]_______|_______|
                                          ▲  ◀――――― window ―――――――▶
-                          alignedFaultAddr  
+                          alignedFaultAddr
                                             ◀――――――――――――――――▶ dataspaceSkipWinOffset
                                               = (alignedFaultAddr - winBase)
-        */ 
+        */
         size_t dataspaceSkipWinOffset = (winBase > alignedFaultAddr) ?
                 0 : (alignedFaultAddr - winBase);
 
@@ -129,21 +129,21 @@ handle_fileserver_fault(struct proc_notification *notification)
            the frame. There are 4 cases here:
 
             Case 1:
-                 |_______|_______|_______|__[――――|―――――――|―――◯―――]_______|_______| 
+                 |_______|_______|_______|__[――――|―――――――|―――◯―――]_______|_______|
                                             ◀――――▶ nbytes = (REFOS_PAGE_SIZE - initFrameSkip)
 
             Case 2:
-                 |_______|_______|_______[―――――――|―――◯―――|―――――――]_______|_______| 
+                 |_______|_______|_______[―――――――|―――◯―――|―――――――]_______|_______|
                                                  ◀―――――――▶ nbytes = REFOS_PAGE_SIZE
 
             Case 3:
-                 |_______|_______|_______[―――――――|―――――――|―◯―××××]_______|_______| 
+                 |_______|_______|_______[―――――――|―――――――|―◯―××××]_______|_______|
                                                          ◀―――▶ nbytes = fileDataSize -
                                                             dataspaceSkipWinOffset - dataspaceOffset
                         (× = indicates there is no more CPIO file data here)
 
             Case 3:
-                 |_______|_______|_______[―――――――|―――――――|―◯――]__|_______|_______| 
+                 |_______|_______|_______[―――――――|―――――――|―◯――]__|_______|_______|
                                                          ◀――――▶ nbytes =
                                                                 winSize - dataspaceSkipWinOffset
         */
@@ -242,7 +242,7 @@ handle_fileserver_content_init(struct proc_notification *notification)
                 destDataspaceOffset, (char*)dspace->fileData + dataspaceOffset,
                 contentSize, &fileServCommon->procServParamBuffer
         );
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             ROS_ERROR("File Server could not provide data.");
             ROS_ERROR("  Faulting client will be permanently blocked.");
             assert(!"handle_fileserver_fault bug.");
@@ -250,7 +250,7 @@ handle_fileserver_content_init(struct proc_notification *notification)
         }
     }
     dvprintf("      Data ready. Content size is 0x%x\n", contentSize);
-    dvprintf("      Successfully initialised content...\n");    
+    dvprintf("      Successfully initialised content...\n");
 
     return DISPATCH_SUCCESS;
 }

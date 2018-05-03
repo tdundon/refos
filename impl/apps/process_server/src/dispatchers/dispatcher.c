@@ -113,7 +113,7 @@ dispatcher_read_param(struct proc_pcb *pcb, uint32_t readLen)
         ROS_ERROR("Parameter buffer too large to be read.")
         return NULL;
     }
-    
+
     /* Reset the static temp buffer. */
     char *tempBuffer = _paramBuffer;
     memset(tempBuffer, 0, PROCSERV_SYSCALL_PARAM_SIZE_MAX);
@@ -121,7 +121,7 @@ dispatcher_read_param(struct proc_pcb *pcb, uint32_t readLen)
     /* Read bytes out of the paramBuffer dataspace. */
     if (readLen > 0) {
         int error = ram_dspace_read(tempBuffer, readLen, pcb->paramBuffer, 0);
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             ROS_ERROR("Parameter buffer failed to read from parameter buffer.");
             assert(!"Failed to read from parameter buffer. This shouldn't happen; Procserv OOM.");
             return NULL;

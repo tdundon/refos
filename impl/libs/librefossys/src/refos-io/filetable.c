@@ -93,7 +93,7 @@ filetable_oat_delete(coat_t *oat, cvector_item_t *obj)
             /* Delete dataspace. */
             if (e->connection.serverSession && e->dspace) {
                 refos_err_t error = data_close(e->connection.serverSession, e->dspace);
-                if (error != ESUCCESS) {
+                if (error != REFOS_ESUCCESS) {
                     printf("filetable_oat_delete error: couldn't close dspace.\n");
                     return;
                 }
@@ -114,7 +114,7 @@ filetable_oat_delete(coat_t *oat, cvector_item_t *obj)
             printf("filetable_oat_delete error: Unknown type.\n");
             break;
     }
-    
+
     return;
 }
 
@@ -147,10 +147,10 @@ filetable_dspace_open(fd_table_t *fdt, char* filePath, int flags, int mode, int 
 {
     assert(fdt && fdt->magic == FD_TABLE_MAGIC);
     if (!filePath) {
-        return -EFILENOTFOUND;
+        return -REFOS_EFILENOTFOUND;
     }
 
-    int error = -EINVALID;
+    int error = -REFOS_EINVALID;
     fd_table_entry_dataspace_t* e = NULL;
     uint32_t arg[COAT_ARGS];
     arg[0] = FD_TABLE_ENTRY_TYPE_DATASPACE;
@@ -159,14 +159,14 @@ filetable_dspace_open(fd_table_t *fdt, char* filePath, int flags, int mode, int 
     coat_alloc(&fdt->table, arg, (cvector_item_t *) &e);
     if (!e) {
         printf("filetable_open out of memory.\n");
-        return -ENOMEM;
+        return -REFOS_ENOMEM;
     }
 
     /* Connect to the dataspace server. */
     assert(e->magic == FD_TABLE_ENTRY_DATASPACE_MAGIC);
     e->connection = serv_connect_no_pbuffer(filePath);
-    if (e->connection.error != ESUCCESS || !e->connection.serverSession) {
-        error = -ESERVERNOTFOUND;
+    if (e->connection.error != REFOS_ESUCCESS || !e->connection.serverSession) {
+        error = -REFOS_ESERVERNOTFOUND;
         goto exit1;
     }
 
@@ -174,7 +174,7 @@ filetable_dspace_open(fd_table_t *fdt, char* filePath, int flags, int mode, int 
     e->dspace = data_open(e->connection.serverSession,
             e->connection.serverMountPoint.dspaceName, flags, mode, size, &error);
     if (error || !e->dspace) {
-        error = -EFILENOTFOUND;
+        error = -REFOS_EFILENOTFOUND;
         goto exit2;
     }
 
@@ -197,10 +197,10 @@ filetable_close(fd_table_t *fdt, int fd)
 {
     assert(fdt && fdt->magic == FD_TABLE_MAGIC);
     if (fd < FD_TABLE_BASE || fd >= fdt->tableSize) {
-        return -EFILENOTFOUND;
+        return -REFOS_EFILENOTFOUND;
     }
     coat_free(&fdt->table, fd);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t
@@ -211,23 +211,23 @@ filetable_lseek(fd_table_t *fdt, int fd, int *offset, int whence)
     assert(fdt && (fdt->magic == FD_TABLE_MAGIC || fdt->magic == 0));
     if (!offset) {
         printf("filetable_lseek - NULL parameter.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     if (fd < FD_TABLE_BASE || fd >= fdt->tableSize) {
-        return EFILENOTFOUND;
+        return REFOS_EFILENOTFOUND;
     }
 
     /* Retrieve the file descr entry. */
     cvector_item_t entry = coat_get(&fdt->table, fd);
     if (!entry) {
-        return EFILENOTFOUND;
+        return REFOS_EFILENOTFOUND;
     }
     char type = *((char*) entry);
 
     /* lseek only support for dataspace entries. */
     if (type != FD_TABLE_ENTRY_TYPE_DATASPACE) {
         assert(!"lseek for this type unimplemented.");
-        return EUNIMPLEMENTED;
+        return REFOS_EUNIMPLEMENTED;
     }
 
     fd_table_entry_dataspace_t *fdEntry = (fd_table_entry_dataspace_t*) entry;
@@ -244,7 +244,7 @@ filetable_lseek(fd_table_t *fdt, int fd, int *offset, int whence)
             fdEntry->dspacePos = fdEntry->dspaceSize + (*offset);
             break;
         default:
-            return EINVALIDPARAM;  
+            return REFOS_EINVALIDPARAM;
     }
 
     if (fdEntry->dspacePos < 0) {
@@ -255,7 +255,7 @@ filetable_lseek(fd_table_t *fdt, int fd, int *offset, int whence)
     }
 
     (*offset) = fdEntry->dspacePos;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 static int
@@ -263,27 +263,27 @@ filetable_internal_read_write(fd_table_t *fdt, int fd, char *buffer, int bufferL
 {
     assert(fdt && fdt->magic == FD_TABLE_MAGIC);
     if (!buffer || !bufferLen) {
-        ROS_SET_ERRNO(ESUCCESS);
+        ROS_SET_ERRNO(REFOS_ESUCCESS);
         return 0;
     }
     if (fd < FD_TABLE_BASE || fd >= fdt->tableSize) {
-        ROS_SET_ERRNO(EFILENOTFOUND);
-        return -EFILENOTFOUND;
+        ROS_SET_ERRNO(REFOS_EFILENOTFOUND);
+        return -REFOS_EFILENOTFOUND;
     }
 
     /* Retrieve the file descr entry. */
     cvector_item_t entry = coat_get(&fdt->table, fd);
     if (!entry) {
-        ROS_SET_ERRNO(EFILENOTFOUND);
-        return -EFILENOTFOUND;
+        ROS_SET_ERRNO(REFOS_EFILENOTFOUND);
+        return -REFOS_EFILENOTFOUND;
     }
     char type = *((char*) entry);
 
     /* Read / write only supported for dataspace entries. */
     if (type != FD_TABLE_ENTRY_TYPE_DATASPACE) {
         assert(!"read / write for this type unimplemented.");
-        ROS_SET_ERRNO(EUNIMPLEMENTED);
-        return -EUNIMPLEMENTED;
+        ROS_SET_ERRNO(REFOS_EUNIMPLEMENTED);
+        return -REFOS_EUNIMPLEMENTED;
     }
 
     fd_table_entry_dataspace_t *fdEntry = (fd_table_entry_dataspace_t*) entry;
@@ -299,7 +299,7 @@ filetable_internal_read_write(fd_table_t *fdt, int fd, char *buffer, int bufferL
 
     /* Perform the actual dataspace read / write operation. */
     assert(fdEntry->dspace);
-    int nr = -EINVALID;
+    int nr = -REFOS_EINVALID;
     if (read) {
         nr = data_read(fdEntry->connection.serverSession, fdEntry->dspace, fdEntry->dspacePos,
                        buffer, bufferLen);
@@ -325,7 +325,7 @@ filetable_internal_read_write(fd_table_t *fdt, int fd, char *buffer, int bufferL
         fdEntry->dspaceSize = data_get_size(fdEntry->connection.serverSession, fdEntry->dspace);
     }
 
-    ROS_SET_ERRNO(ESUCCESS);
+    ROS_SET_ERRNO(REFOS_ESUCCESS);
     return nr;
 }
 
@@ -346,23 +346,23 @@ filetable_dspace_get(fd_table_t *fdt, int fd)
 {
     assert(fdt && fdt->magic == FD_TABLE_MAGIC);
     if (fd < FD_TABLE_BASE || fd >= fdt->tableSize) {
-        ROS_SET_ERRNO(EFILENOTFOUND);
-        return -EFILENOTFOUND;
+        ROS_SET_ERRNO(REFOS_EFILENOTFOUND);
+        return -REFOS_EFILENOTFOUND;
     }
 
     /* Retrieve the file descr entry. */
     cvector_item_t entry = coat_get(&fdt->table, fd);
     if (!entry) {
-        ROS_SET_ERRNO(EFILENOTFOUND);
-        return -EFILENOTFOUND;
+        ROS_SET_ERRNO(REFOS_EFILENOTFOUND);
+        return -REFOS_EFILENOTFOUND;
     }
     char type = *((char*) entry);
 
     /* Read / write only supported for dataspace entries. */
     if (type != FD_TABLE_ENTRY_TYPE_DATASPACE) {
         assert(!"dspace_get for this type unsupported.");
-        ROS_SET_ERRNO(EUNIMPLEMENTED);
-        return -EUNIMPLEMENTED;
+        ROS_SET_ERRNO(REFOS_EUNIMPLEMENTED);
+        return -REFOS_EUNIMPLEMENTED;
     }
 
     fd_table_entry_dataspace_t *fdEntry = (fd_table_entry_dataspace_t*) entry;

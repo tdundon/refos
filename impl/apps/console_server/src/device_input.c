@@ -61,7 +61,7 @@ input_push_char(struct input_state *s, int c)
 }
 
 /*! @brief The IRQ handling callback function.
-   
+
     This callback function gets called from the interrupt dispatcher module to handle RX irqs.
     It adds the inputted character to the backlog, and then goes through the waiting list and
     replies to any waiters.
@@ -188,13 +188,13 @@ input_save_caller_as_waiter(struct input_state *s, struct srv_client *c, bool ty
 {
     assert(s && s->magic == CONSERV_DEVICE_INPUT_MAGIC);
     assert(c && c->magic == CONSERV_CLIENT_MAGIC);
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Allocate and fill out waiter structure. */
     struct input_waiter *waiter = malloc(sizeof(struct input_waiter));
     if (!waiter) {
         ROS_ERROR("input_save_caller_as_waiter failed to alloc waiter struct.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     waiter->magic = CONSERV_DEVICE_INPUT_WAITER_MAGIC;
     waiter->client = c;
@@ -204,7 +204,7 @@ input_save_caller_as_waiter(struct input_state *s, struct srv_client *c, bool ty
     waiter->reply = csalloc();
     if (!waiter->reply) {
         ROS_ERROR("input_save_caller_as_waiter failed to alloc cslot.");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit1;
     }
 
@@ -212,14 +212,14 @@ input_save_caller_as_waiter(struct input_state *s, struct srv_client *c, bool ty
     error = seL4_CNode_SaveCaller(REFOS_CSPACE, waiter->reply, REFOS_CDEPTH);
     if (error != seL4_NoError) {
         ROS_ERROR("input_save_caller_as_waiter failed to save caller.");
-        error = EINVALID;
+        error = REFOS_EINVALID;
         goto exit2;
     }
 
     /* Add to waiter list. (Takes ownership) */
     cvector_add(&s->waiterList, (cvector_item_t) waiter);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:

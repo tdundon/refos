@@ -72,7 +72,7 @@ sys_brk(va_list ap)
         return refosIOState.procInfo->heapRegion.vaddr;
     } else if (newbrk < refosIOState.procInfo->heapRegion.vaddr) {
         /* Invalid brk location. */
-        return -ENOMEM;
+        return -_ENOMEM;
     } else if (newbrk < refosIOState.procInfo->heapRegion.vaddr +
             refosIOState.procInfo->heapRegion.size) {
         /* Our current heap region is large enough. */
@@ -91,7 +91,7 @@ sys_brk(va_list ap)
     refosio_internal_save_IPC_buffer();
     int error = refosio_morecore_expand(&refosIOState.procInfo->heapRegion,
             increaseSizePages * REFOS_PAGE_SIZE);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         seL4_DebugPrintf("ERROR: refos dynamic sbrk out of memory.\n");
         assert(!"ERROR: refos dynamic sbrk out of memory.");
         return -_ENOMEM;
@@ -117,7 +117,7 @@ sys_mmap2(va_list ap)
     int flags = va_arg(ap, int);
     int fd = va_arg(ap, int);
     off_t offset = va_arg(ap, int);
-    
+
     (void) prot;
     (void) offset;
     (void) fd;
@@ -153,7 +153,7 @@ sys_mmap2(va_list ap)
         /* Allocate pages and map window. */
         refosio_internal_save_IPC_buffer();
         int error = refosio_mmap_anon(&refosIOState.mmapState, sizeNPages, &vaddr);
-        if (error != ESUCCESS || !vaddr) {
+        if (error != REFOS_ESUCCESS || !vaddr) {
             seL4_DebugPrintf("refosio_mmap_anon mapping failed.\n");
             return -_ENOMEM;
         }
@@ -191,7 +191,7 @@ sys_munmap(va_list ap)
     if ((uint32_t)addr >= PROCESS_MMAP_BOT && (uint32_t)addr < PROCESS_MMAP_TOP) {
         uint32_t sizeNPages = refos_round_up_npages(length);
         int error = refosio_munmap_anon(&refosIOState.mmapState, (uint32_t) addr, sizeNPages);
-        if (error  != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             seL4_DebugPrintf("refosio_munmap_anon mapping failed. Ignoring unmap.\n");
             return -1;
         }

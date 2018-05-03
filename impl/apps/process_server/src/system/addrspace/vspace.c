@@ -55,7 +55,7 @@ vs_initialise(struct vs_vspace *vs, uint32_t pid)
     assert(vs);
     dvprintf("    Initialising a vspace...\n");
     memset(vs, 0, sizeof(*vs));
-    int error = ESUCCESS;
+    int error = REFOS_ESUCCESS;
 
     vs->magic = REFOS_VSPACE_MAGIC;
     vs->ref = 1;
@@ -72,8 +72,8 @@ vs_initialise(struct vs_vspace *vs, uint32_t pid)
     struct pd_info pdi = pd_assign(&procServ.PDList);
     if (!pdi.kpdObject | !pdi.kcnodeObject) {
         ROS_ERROR("Failed to allocate page directory for new process.");
-        error = ENOMEM;
-        goto exit1;   
+        error = REFOS_ENOMEM;
+        goto exit1;
     }
     vs->kpd = pdi.kpdObject;
 
@@ -88,7 +88,7 @@ vs_initialise(struct vs_vspace *vs, uint32_t pid)
     error = vka_cspace_alloc_path(&procServ.vka, &vs->cspace);
     if (error) {
         ROS_ERROR("Failed to allocate guarded cspace cslot: error %d\n", error);
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit2;
     }
 
@@ -107,7 +107,7 @@ vs_initialise(struct vs_vspace *vs, uint32_t pid)
     );
     if (error) {
         ROS_ERROR("Could not copy self reference cspace cap: error %d\n", error);
-        error = EINVALID;
+        error = REFOS_EINVALID;
         goto exit3;
     }
 
@@ -120,12 +120,12 @@ vs_initialise(struct vs_vspace *vs, uint32_t pid)
     );
     if (error) {
         ROS_ERROR("Failed to initialise sel4utils vspace struct: %d\n", error);
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit3;
     }
 
     dvprintf("        VSpace setup OK, new vspace is ready to go.\n");
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit3:
@@ -218,7 +218,7 @@ vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word pe
     assert(vs && vs->magic == REFOS_VSPACE_MAGIC);
     assert(winID != NULL);
     *winID = W_INVALID_WINID;
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Check the window segment with window association list for any conflicts. */
     if (w_associate_check(&vs->windows, vaddr, size) == false) {
@@ -231,7 +231,7 @@ vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word pe
         dvprintf("―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――\n");
         #endif
 
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Create the seL4 vspace reservation. */
@@ -239,7 +239,7 @@ vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word pe
             w_convert_permission_to_caprights(permissions), cacheable);
     if (r.res == NULL) {
         dvprintf("vspace reservation failed.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Add to global window list. */
@@ -247,7 +247,7 @@ vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word pe
                                               permissions, &vs->vspace, r, cacheable);
     if (!window) {
         ROS_ERROR("window creation failed.\n");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit0;
     }
     assert(window->wID != W_INVALID_WINID);
@@ -257,15 +257,15 @@ vs_create_window(struct vs_vspace *vs, vaddr_t vaddr, vaddr_t size, seL4_Word pe
     if (error) {
         ROS_ERROR("Window associate failed.");
         assert(!"Window associate failed even after check. This is likely a bug.");
-        error = EINVALID;
+        error = REFOS_EINVALID;
         goto exit1;
     }
 
     *winID = window->wID;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
-exit1: 
+exit1:
     /* Note that ownership of reservation is transferred to window. */
     w_delete_window(&procServ.windowList, window->wID);
     return error;
@@ -294,7 +294,7 @@ vs_delete_window(struct vs_vspace *vs, int wID)
 
     /* Delete the window from the global window list. */
     int error = w_delete_window(&procServ.windowList, wID);
-    assert(error == ESUCCESS);
+    assert(error == REFOS_ESUCCESS);
     (void) error;
 }
 
@@ -303,21 +303,21 @@ vs_resize_window(struct vs_vspace *vs, int wID, vaddr_t size)
 {
     assert(vs && vs->magic == REFOS_VSPACE_MAGIC);
     if (!size) {
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Find the associated window. */
     struct w_associated_window *awindow = w_associate_find_winID(&vs->windows, wID);
     if (!awindow || awindow->winID != wID) {
         ROS_WARNING("vs_resize_window: no such window assoc exists.");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Find the global window structure. */
     struct w_window* window = w_get_window(&procServ.windowList, wID);
     if (!window) {
         ROS_WARNING("vs_resize_window: no such window exists.");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
     assert(awindow->offset == (vaddr_t) reservation_to_res(window->reservation)->start);
 
@@ -335,7 +335,7 @@ vs_resize_window(struct vs_vspace *vs, int wID, vaddr_t size)
             dvprintf("―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――\n");
             #endif
 
-            return EINVALIDPARAM;
+            return REFOS_EINVALIDPARAM;
         }
     } else if (size < awindow->size) {
         /* If new size is smaller, we need to unmap. */
@@ -356,7 +356,7 @@ vs_resize_window(struct vs_vspace *vs, int wID, vaddr_t size)
     }
 
     awindow->size = size;
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /* ---------------------------------- VSpace mapping ---------------------------------------------*/
@@ -365,7 +365,7 @@ int
 vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
 {
     assert(vs && vs->magic == REFOS_VSPACE_MAGIC);
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
     vaddr = REFOS_PAGE_ALIGN(vaddr);
 
     /* Check the window association to make sure there exists a window there. */
@@ -382,7 +382,7 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
         dvprintf("―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――\n");
         #endif
 
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Retrieve the window structure. */
@@ -390,7 +390,7 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
     if (!window) {
         dvprintf("could not find window.\n");
         assert(!"window book keeping bug. Should not happen.");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
     assert(window->vspace == &vs->vspace);
 
@@ -401,7 +401,7 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
                 (void*) (vaddr + va * REFOS_PAGE_SIZE));
         if (existingFrame) {
             /* There's already mapped frame here. */
-            return EUNMAPFIRST;
+            return REFOS_EUNMAPFIRST;
         }
     }
 
@@ -409,14 +409,14 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
     seL4_CPtr* frameCopy = malloc(sizeof(seL4_CPtr) * nFrames);
     if (!frameCopy) {
         ROS_ERROR("Could not allocate frame copy array, procserv out of memory.\n");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     memset(frameCopy, 0, sizeof(seL4_CPtr) * nFrames);
     for (int i = 0; i < nFrames; i++) {
         vka_cspace_alloc(&procServ.vka, &frameCopy[i]);
         if (!frameCopy[i]) {
             ROS_ERROR("Could not allocate cspace to copy array.\n");
-            error = ENOMEM;
+            error = REFOS_ENOMEM;
             goto exit1;
         }
         cspacepath_t pathDest, pathSrc;
@@ -430,7 +430,7 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
                                           seL4_PageBits, window->reservation);
     if (error) {
         dvprintf("could not map pages into vaddr 0x%x. error: %d\n", (uint32_t) vaddr, error);
-        error = EUNMAPFIRST;
+        error = REFOS_EUNMAPFIRST;
         goto exit1;
     }
 
@@ -439,7 +439,7 @@ vs_map(struct vs_vspace *vs, vaddr_t vaddr, seL4_CPtr frames[], int nFrames)
 
     dvprintf("mapping vaddr 0x%x OK.\n", (uint32_t) vaddr);
     free(frameCopy);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit1:
@@ -467,20 +467,20 @@ vs_map_across_vspace(struct vs_vspace *vsSrc, vaddr_t vaddrSrc, struct w_window 
     seL4_CPtr frameCap = vspace_get_cap(&vsSrc->vspace, (void*) vaddrSrc);
     if (!frameCap) {
         dvprintf("vs_map_across_vspace could not find source frame.\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Verify that the offset is within the window limits. */
     if (windowDestOffset >= windowDest->size) {
         ROS_ERROR("invalid window offset address!\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Find the client which this window lives in. */
     struct proc_pcb *clientPCB = pid_get_pcb(&procServ.PIDList, windowDest->clientOwnerPID);
     if (!clientPCB) {
         ROS_ERROR("could not find window's corresponding client.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
     if (outClientPCB) {
         (*outClientPCB) = clientPCB;
@@ -491,7 +491,7 @@ vs_map_across_vspace(struct vs_vspace *vsSrc, vaddr_t vaddrSrc, struct w_window 
                                                             windowDest->wID);
     if (!wa) {
         ROS_ERROR("client did not map its window, so invalid map call.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     return vs_map(&clientPCB->vspace, wa->offset + windowDestOffset, &frameCap, 1);
@@ -507,57 +507,57 @@ vs_map_device(struct vs_vspace *vs, struct w_window *window, uint32_t windowOffs
     if (size != REFOS_PAGE_SIZE) {
         ROS_WARNING("Large device frames not supported yet.");
         assert(!"Large device frames not implemented.");
-        return EUNIMPLEMENTED;
+        return REFOS_EUNIMPLEMENTED;
     }
 
     /* Verify that the offset is within the window limits. */
     if (windowOffset + size > window->size) {
         ROS_ERROR("invalid window offset address!\n");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Check that this client actually has its own window mapped. */
     struct proc_pcb* clientPCB = pid_get_pcb(&procServ.PIDList, window->clientOwnerPID);
     if (!clientPCB) {
         ROS_ERROR("invalid window owner!\n");
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     assert(clientPCB->magic == REFOS_PCB_MAGIC);
     if (&clientPCB->vspace != vs) {
-        return EACCESSDENIED;
+        return REFOS_EACCESSDENIED;
     }
     struct w_associated_window *wa = w_associate_find_winID(&clientPCB->vspace.windows,
                                                             window->wID);
     if (!wa) {
         ROS_ERROR("client did not map its window, so invalid map call.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Check window cacheable state matches with requested cached state. */
     if (cached != window->cacheable) {
         ROS_WARNING("Window cachable and frame cache request mismatch. Access denied.");
-        return EACCESSDENIED;
+        return REFOS_EACCESSDENIED;
     }
 
     /* Find the device cap. */
     cspacepath_t deviceFrame = procserv_find_device((void*) paddr, size);
     if (deviceFrame.capPtr == 0) {
         ROS_WARNING("No such device.");
-        return EFILENOTFOUND;
+        return REFOS_EFILENOTFOUND;
     }
     dvprintf("Device 0x%x found at cslot 0x%x...\n", paddr, deviceFrame.capPtr);
 
     /* Map the device frame. */
     vaddr_t vaddr = wa->offset + windowOffset;
     int error = vs_map(vs, vaddr, &deviceFrame.capPtr, 1);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_WARNING("Failed to map device.");
         return error;
     }
 
     vka_cnode_delete(&deviceFrame);
     vka_cspace_free(&procServ.vka, deviceFrame.capPtr);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 static void
@@ -594,7 +594,7 @@ vs_unmap(struct vs_vspace *vs, vaddr_t vaddr, int nFrames)
             nFrames * REFOS_PAGE_SIZE);
     if (!awindow) {
         dvprintf("could not find window association for vaddr 0x%x.\n", (uint32_t) vaddr);
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Retrieve the window structure. */
@@ -602,7 +602,7 @@ vs_unmap(struct vs_vspace *vs, vaddr_t vaddr, int nFrames)
     if (!window) {
         dvprintf("could not find window.\n");
         assert(!"window book keeping bug. Should not happen.");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
     assert(window->vspace == &vs->vspace);
 
@@ -610,7 +610,7 @@ vs_unmap(struct vs_vspace *vs, vaddr_t vaddr, int nFrames)
     for (vaddr_t va = 0; va < nFrames; va++) {
         vs_unmap_frame(vs, vaddr + va * REFOS_PAGE_SIZE);
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 void

@@ -97,7 +97,7 @@ _sys_writev(int fildes, struct iovec *iov, int iovcnt)
     /* The iovcnt argument is valid if greater than 0 and less than or equal to IOV_MAX. */
     if (iovcnt <= 0 || iovcnt > IOV_MAX)
         return -EINVAL;
-   
+
     /* The sum of iov_len is valid if less than or equal to SSIZE_MAX i.e. cannot overflow
        a ssize_t. */
     for (int i = 0; i < iovcnt; i++) {
@@ -126,7 +126,7 @@ _sys_writev(int fildes, struct iovec *iov, int iovcnt)
         for (int i = 0; i < iovcnt; i++) {
             if (iov[i].iov_len == 0) continue;
             int offset = 0;
-            
+
             while (offset < iov[i].iov_len) {
                 int nc = filetable_write(&refosIOState.fdTable, fildes, iov[i].iov_base + offset,
                                          iov[i].iov_len - offset);
@@ -177,7 +177,7 @@ _sys_readv(int fildes, struct iovec *iov, int iovcnt)
 {
     long long sum = 0;
     ssize_t ret = 0;
-    
+
     /* The iovcnt argument is valid if greater than 0 and less than or equal to IOV_MAX. */
     if (iovcnt <= 0 || iovcnt > IOV_MAX)
         return -EINVAL;
@@ -192,11 +192,11 @@ _sys_readv(int fildes, struct iovec *iov, int iovcnt)
         if (sum > SSIZE_MAX)
             return -EINVAL;
     }
-    
+
     /* If all the iov_len members in the array are 0, return 0. */
     if (!sum)
         return 0;
-    
+
     /* Read the iov buffers. */
     if (fildes == STDIN_FD) {
         /* Read from STDIN. */
@@ -206,12 +206,12 @@ _sys_readv(int fildes, struct iovec *iov, int iovcnt)
             break;
         }
         return ret;
-    } 
+    }
 
     /* Read from dataspace file. */
     for (int i = 0; i < iovcnt; i++) {
         if (iov[i].iov_len == 0) continue;
-    
+
         int nc = filetable_read(&refosIOState.fdTable, fildes, iov[i].iov_base, iov[i].iov_len);
         if (nc < 0) {
             return -1;
@@ -266,12 +266,12 @@ sys_open(va_list ap)
     /* Open dataspace file. */
     fd = filetable_dspace_open(&refosIOState.fdTable, pathname, flags, 0, 0x1000);
     switch (ROS_ERRNO()) {
-        case ESUCCESS: break;
-        case EINVALID: return -EFAULT;
-        case EINVALIDPARAM: return -EACCES;
-        case EFILENOTFOUND: return -EMFILE;
-        case ESERVERNOTFOUND: return -EMFILE;
-        default: return -EFAULT;
+        case REFOS_ESUCCESS:        break;
+        case REFOS_EINVALID:        return -EFAULT;
+        case REFOS_EINVALIDPARAM:   return -EACCES;
+        case REFOS_EFILENOTFOUND:   return -EMFILE;
+        case REFOS_ESERVERNOTFOUND: return -EMFILE;
+        default:                    return -EFAULT;
     }
     assert(fd);
 
@@ -285,11 +285,11 @@ _sys_lseek(int fildes, off_t offset, int whence)
     if (fildes == STDOUT_FD || fildes == STDERR_FD || fildes == STDIN_FD) {
         /* lseek for STDOUT / STDIN / STDERR makes no sense. */
         return newOffset;
-    } 
+    }
 
     /* Perform lseek on filetable. */
     int error = filetable_lseek(&refosIOState.fdTable, fildes, &newOffset, whence);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         return -EFAULT;
     }
     return newOffset;
@@ -300,7 +300,7 @@ sys_lseek(va_list ap)
 {
     int fildes = va_arg(ap, int);
     off_t offset = va_arg(ap, int);
-    int whence = va_arg(ap, int); 
+    int whence = va_arg(ap, int);
     return _sys_lseek(fildes, offset , whence);
 }
 
@@ -349,7 +349,7 @@ sys_close(va_list ap)
 
     /* Perform close on filetable. */
     int error = filetable_close(&refosIOState.fdTable, fildes);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         return -EIO;
     }
     return 0;

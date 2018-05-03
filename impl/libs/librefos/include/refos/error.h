@@ -18,58 +18,58 @@
 
 /*! @file
     @brief RefOS Error codes.
-    
+
     Shared error codes for RefOS methods.
 */
 
 enum refos_error {
     /*! @brief There was no error. */
-    ESUCCESS = 0,
-    
+    REFOS_ESUCCESS = 0,
+
     /*! @brief Ran out of heap, cslots or untyped memory. */
-    ENOMEM,
-    
+    REFOS_ENOMEM,
+
     /*! @brief An internal error occured with the service. */
-    EINVALID,
-    
+    REFOS_EINVALID,
+
     /*! @brief The given client capability is invalid. */
-    EUNKNOWNCLIENT,
-    
+    REFOS_EUNKNOWNCLIENT,
+
     /*! @brief A given parameter was invalid. */
-    EINVALIDPARAM,
-    
+    REFOS_EINVALIDPARAM,
+
     /*! @brief The server name was not found by the naming service. */
-    ESERVERNOTFOUND,
-    
+    REFOS_ESERVERNOTFOUND,
+
     /*! @brief The given window capability is invalid. */
-    EINVALIDWINDOW,
-    
+    REFOS_EINVALIDWINDOW,
+
     /*! @brief The server is currently unavailable; try again later. */
-    ESERVICEUNAVAILABLE,
-    
+    REFOS_ESERVICEUNAVAILABLE,
+
     /*! @brief Insufficient permission for the requested operation. */
-    EACCESSDENIED,
-    
+    REFOS_EACCESSDENIED,
+
     /*! @brief Occurs when a pager service tries to map a frame where there already is one. */
-    EUNMAPFIRST,
-    
+    REFOS_EUNMAPFIRST,
+
     /*! @brief The file name was not found on the dataspace server. */
-    EFILENOTFOUND,
-    
+    REFOS_EFILENOTFOUND,
+
     /*! @brief End of file was reached. */
-    EENDOFFILE,
-    
+    REFOS_EENDOFFILE,
+
     /*! @brief The device was not found on the system. */
-    EDEVICENOTFOUND,
-   
+    REFOS_EDEVICENOTFOUND,
+
     /*! @brief The operation requires access to the param buffer but no param buffer exists */
-    ENOPARAMBUFFER,
+    REFOS_ENOPARAMBUFFER,
 
     /*! @brief This feature has not been implemented. */
-    EUNIMPLEMENTED,
+    REFOS_EUNIMPLEMENTED,
 
     /*! @brief Request has been delegated to another server. */
-    EDELEGATED
+    REFOS_EDELEGATED
 };
 
 #ifndef __defined_err_t__
@@ -86,37 +86,37 @@ static inline const char*
 refos_error_str(refos_err_t err)
 {
     switch (err) {
-        case ESUCCESS:
+        case REFOS_ESUCCESS:
             return "ESUCCESS";
-        case ENOMEM:
+        case REFOS_ENOMEM:
             return "ENOMEM";
-        case EINVALID:
+        case REFOS_EINVALID:
             return "EINVALID";
-        case EUNKNOWNCLIENT:
+        case REFOS_EUNKNOWNCLIENT:
             return "EUNKNOWNCLIENT";
-        case EINVALIDPARAM:
+        case REFOS_EINVALIDPARAM:
             return "EINVALIDPARAM";
-        case ESERVERNOTFOUND:
+        case REFOS_ESERVERNOTFOUND:
             return "ESERVERNOTFOUND";
-        case EINVALIDWINDOW:
+        case REFOS_EINVALIDWINDOW:
             return "EINVALIDWINDOW";
-        case ESERVICEUNAVAILABLE:
+        case REFOS_ESERVICEUNAVAILABLE:
             return "ESERVICEUNAVAILABLE";
-        case EACCESSDENIED:
+        case REFOS_EACCESSDENIED:
             return "EACCESSDENIED";
-        case EUNMAPFIRST:
+        case REFOS_EUNMAPFIRST:
             return "EUNMAPFIRST";
-        case EFILENOTFOUND:
+        case REFOS_EFILENOTFOUND:
             return "EFILENOTFOUND";
-        case EENDOFFILE:
+        case REFOS_EENDOFFILE:
             return "EENDOFFILE";
-        case EDEVICENOTFOUND:
+        case REFOS_EDEVICENOTFOUND:
             return "EDEVICENOTFOUND";
-        case ENOPARAMBUFFER:
+        case REFOS_ENOPARAMBUFFER:
             return "ENOPARAMBUFFER";
-        case EUNIMPLEMENTED:
+        case REFOS_EUNIMPLEMENTED:
             return "EUNIMPLEMENTED";
-        case EDELEGATED:
+        case REFOS_EDELEGATED:
             return "EDELEGATED";
         default:
             return "EUNKNOWNERROR";
@@ -164,7 +164,7 @@ seL4_error_str(int sel4err)
 extern refos_err_t _refos_errno;
 
 #if CONFIG_REFOS_HALT_ON_ERRNO
-    #define REFOS_SET_ERRNO(x) _refos_errno = x; if (_refos_errno != ESUCCESS) \
+    #define REFOS_SET_ERRNO(x) _refos_errno = x; if (_refos_errno != REFOS_ESUCCESS) \
         {\
             printf("REFOS call generated error in file %s line %d", __FILE__, __LINE__);\
             assert(!"Halt because REFOS_HALT_ON_ERRNO is enabled.");\

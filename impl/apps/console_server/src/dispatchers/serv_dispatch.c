@@ -41,7 +41,7 @@ refos_err_t
 serv_ping_handler(void *rpc_userptr)
 {
     dprintf(COLOUR_Y "CONSOLE SERVER RECIEVED PING!!! HI THERE! (•_•)" COLOUR_RESET "\n");
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t

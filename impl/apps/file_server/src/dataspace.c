@@ -218,13 +218,13 @@ dspace_externalID_associate(chash_t *ht, int objID, int dsID, int dsOffset,
     dspace_externalID_unassociate(ht, objID);
     struct dataspace_association_info *di = malloc(sizeof(struct dataspace_association_info));
     if (!di) {
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     di->dataspaceID = dsID;
     di->dataspaceOffset = dsOffset;
     di->objectCap = cap;
     chash_set(ht, objID, (chash_item_t) di);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int

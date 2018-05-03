@@ -38,7 +38,7 @@ refos_err_t
 serv_ping_handler(void *rpc_userptr)
 {
     dprintf(COLOUR_M "FILE SERVER RECIEVED PING!!! HI THERE! (╯°□°）╯︵ ┻━┻\n" COLOUR_RESET);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t

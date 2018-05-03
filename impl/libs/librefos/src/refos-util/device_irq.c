@@ -60,7 +60,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
     if (irq >= DEVICE_MAX_IRQ) {
         ROS_ERROR("dev_handle_irq IRQ num too high. Try raising DEVICE_MAX_IRQ.");
         assert(!"Try raising DEVICE_MAX_IRQ.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Retrieve the handler, if necessary. */
@@ -71,7 +71,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
         );
         if (!irqState->handler[irq].handler) {
             ROS_WARNING("dev_handle_irq : could not get IRQ handler for irq %u.\n", irq);
-            return EINVALID;
+            return REFOS_EINVALID;
         }
     }
 
@@ -86,7 +86,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
                                   irqState->cfg.notifyAsyncEP);
     if (!irqBadge) {
         ROS_WARNING("dev_handle_irq : could not mint badged aep for irq %u.\n", irq);
-        return EINVALID;
+        return REFOS_EINVALID;
     }
 
     /* Assign AEP to the IRQ handler. */
@@ -94,7 +94,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
     if (error) {
         ROS_WARNING("dev_handle_irq : could not set notify aep for irq %u.\n", irq);
         csfree_delete(irqBadge);
-        return EINVALID;
+        return REFOS_EINVALID;
     }
     seL4_IRQHandler_Ack(irqState->handler[irq].handler);
 
@@ -103,7 +103,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
     irqState->handler[irq].cookie = cookie;
 
     csfree_delete(irqBadge);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int dev_dispatch_interrupt(dev_irq_state_t *irqState, srv_msg_t *m)
@@ -121,7 +121,7 @@ int dev_dispatch_interrupt(dev_irq_state_t *irqState, srv_msg_t *m)
             IRQFound = true;
 
             /* Go through every IRQ clash. If the server needs to handle a lot of different IRQs
-               then this will lead to false positives. This seems to be a kernel API limitation 
+               then this will lead to false positives. This seems to be a kernel API limitation
                of a single threaded server design. More threads listening to multiple endpoints
                will avoid this problem of IRQ clash.
 

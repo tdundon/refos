@@ -41,7 +41,7 @@ refos_err_t
 serv_ping_handler(void *rpc_userptr)
 {
     dprintf(COLOUR_B "Timer server RECIEVED PING!!! HI THERE! ʕ•ᴥ•ʔ" COLOUR_RESET "\n");
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 refos_err_t

@@ -12,7 +12,7 @@
 
 /*! @file
     @brief CPIO Fileserver pager RAM frame block module.
-    
+
     Creates big anon RAM dataspace and uses it to manage allocation/deallocation of the frames of
     the RAM dataspace to be used for paging clients. The frame block works by using a frame pool
     (cpool_t structure), with the big dataspace mapped into a window. We then call data_datamap
@@ -52,10 +52,10 @@ pager_init(struct fs_frame_block* fb, uint32_t framesSize)
 
     /* Initialise the anonymouse RAM dataspace to allocate from. */
     dprintf("        Creating pager frame block...\n");
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
     fb->dataspace = data_open(REFOS_PROCSERV_EP, "anon", O_CREAT | O_WRONLY  |O_TRUNC, O_RDWR,
         framesSize, &error);
-    if (error != ESUCCESS || !fb->dataspace) {
+    if (error != REFOS_ESUCCESS || !fb->dataspace) {
         ROS_ERROR("page_init failed to open anon dataspace.");
         assert(!"page_init failed to open anon dataspace.");
         return;
@@ -75,7 +75,7 @@ pager_init(struct fs_frame_block* fb, uint32_t framesSize)
     /* Map the dataspace into the window. */
     dprintf("        Datamapping frame block...\n");
     error = data_datamap(REFOS_PROCSERV_EP, fb->dataspace, fb->window, 0);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         ROS_ERROR("page_init failed to datamap dataspace to window.");
         assert(!"page_init failed to datamap dataspace to window.");
         return;

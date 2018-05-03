@@ -38,7 +38,7 @@ refosio_mmap_init(refos_io_mmap_segment_state_t *s)
 int
 refosio_mmap_segment_fill(refos_io_mmap_segment_state_t *s, uint32_t vaddrOffsetPage)
 {
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
     assert(vaddrOffsetPage >= PROCESS_MMAP_BOT && vaddrOffsetPage < PROCESS_MMAP_TOP);
     uint32_t segmentID = (PROCESS_MMAP_TOP - vaddrOffsetPage) /
         (PROCESS_MMAP_SEGMENT_SIZE_NPAGES * REFOS_PAGE_SIZE);
@@ -46,7 +46,7 @@ refosio_mmap_segment_fill(refos_io_mmap_segment_state_t *s, uint32_t vaddrOffset
 
     if (cbpool_check_single(&s->mmapRegionSegmentStatus, segmentID)) {
         /* This segment is already filled. Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Create the window. */
@@ -56,9 +56,9 @@ refosio_mmap_segment_fill(refos_io_mmap_segment_state_t *s, uint32_t vaddrOffset
 
     seL4_CPtr window = proc_create_mem_window(vaddr,
             PROCESS_MMAP_SEGMENT_SIZE_NPAGES * REFOS_PAGE_SIZE);
-    if (!window || REFOS_GET_ERRNO() != ESUCCESS) {
+    if (!window || REFOS_GET_ERRNO() != REFOS_ESUCCESS) {
         seL4_DebugPrintf("mmap_segment_fill: Could not create window.\n");
-        return EINVALIDWINDOW;
+        return REFOS_EINVALIDWINDOW;
     }
 
     /* Create the dataspace. */
@@ -66,13 +66,13 @@ refosio_mmap_segment_fill(refos_io_mmap_segment_state_t *s, uint32_t vaddrOffset
             PROCESS_MMAP_SEGMENT_SIZE_NPAGES * REFOS_PAGE_SIZE, &error);
     if (error) {
         seL4_DebugPrintf("mmap_segment_fill: Could not create anon dspace.\n");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit1;
     }
 
     /* Map the segment dataspace into the window. */
     error = data_datamap(REFOS_PROCSERV_EP, dataspace, window, 0);
-    if (error != ESUCCESS) {
+    if (error != REFOS_ESUCCESS) {
         seL4_DebugPrintf("mmap_segment_fill: Could not map anon dspace.\n");
         goto exit2;
     }
@@ -82,7 +82,7 @@ refosio_mmap_segment_fill(refos_io_mmap_segment_state_t *s, uint32_t vaddrOffset
 
     csfree_delete(dataspace);
     csfree_delete(window);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:
@@ -104,7 +104,7 @@ refosio_mmap_segment_release(refos_io_mmap_segment_state_t *s, uint32_t vaddrOff
 
     if (!cbpool_check_single(&s->mmapRegionSegmentStatus, segmentID)) {
         /* This segment is already released. Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Check that every page associated has neem release. Otherwise we don't unmap yet. */
@@ -112,7 +112,7 @@ refosio_mmap_segment_release(refos_io_mmap_segment_state_t *s, uint32_t vaddrOff
         uint32_t page = ( (PROCESS_MMAP_TOP - vaddrOffsetPage) / REFOS_PAGE_SIZE ) + i;
         if (cbpool_check_single(&s->mmapRegionPageStatus, page)) {
             /* A page is still mapped here. */
-            return EUNMAPFIRST;
+            return REFOS_EUNMAPFIRST;
         }
     }
 
@@ -121,13 +121,13 @@ refosio_mmap_segment_release(refos_io_mmap_segment_state_t *s, uint32_t vaddrOff
     if (!window) {
         /* Nothing mapped here. Nothing to do. */
         seL4_DebugPrintf("mmap_segment_release: No window to release. Doing nothing.\n");
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
 
     /* Get the associated dataspace and release it. */
-    refos_err_t refos_err = -EINVALID;
+    refos_err_t refos_err = -REFOS_EINVALID;
     seL4_CPtr dspace = proc_get_mem_window_dspace(window, &refos_err);
-    if (refos_err != ESUCCESS) {
+    if (refos_err != REFOS_ESUCCESS) {
         seL4_DebugPrintf("mmap_segment_fill: Failed to get window dataspace, error occued.\n");
         return (int) refos_err;
     }
@@ -148,7 +148,7 @@ refosio_mmap_segment_release(refos_io_mmap_segment_state_t *s, uint32_t vaddrOff
 
     /* Set the segment allocated status back to FALSE. */
     cbpool_set_single(&s->mmapRegionSegmentStatus, segmentID, false);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -156,7 +156,7 @@ refosio_mmap_anon(refos_io_mmap_segment_state_t *s, int npages, uint32_t *vaddrD
 {
     if (!npages) {
         /* Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
     assert(s);
 
@@ -164,7 +164,7 @@ refosio_mmap_anon(refos_io_mmap_segment_state_t *s, int npages, uint32_t *vaddrD
     uint32_t vaddrOffsetPage = cbpool_alloc(&s->mmapRegionPageStatus, npages);
     if (vaddrOffsetPage == CBPOOL_INVALID) {
         seL4_DebugPrintf("mmap_anon: Could not allocate page region. Out of virtual memory.\n");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
 
     /* Loop through every segment and fill it in. */
@@ -173,7 +173,7 @@ refosio_mmap_anon(refos_io_mmap_segment_state_t *s, int npages, uint32_t *vaddrD
 
         /* Fill in the segment. If the segment already is filled then it does nothing. */
         int error = refosio_mmap_segment_fill(s, vaddr);
-        if (error != ESUCCESS) {
+        if (error != REFOS_ESUCCESS) {
             seL4_DebugPrintf("mmap_segment_fill failed. Cannot fully recover from this.\n");
 
             /* All the segments up to this point have been allocated. All the segments here and
@@ -188,7 +188,7 @@ refosio_mmap_anon(refos_io_mmap_segment_state_t *s, int npages, uint32_t *vaddrD
     if (vaddrDest) {
         (*vaddrDest) = PROCESS_MMAP_TOP - ((vaddrOffsetPage + npages) * REFOS_PAGE_SIZE);
     }
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -196,15 +196,15 @@ refosio_munmap_anon(refos_io_mmap_segment_state_t *s, uint32_t vaddr, int npages
 {
     if (npages == 0) {
         /* Nothing to do here. */
-        return ESUCCESS;
+        return REFOS_ESUCCESS;
     }
     if (vaddr >= PROCESS_MMAP_TOP) {
         seL4_DebugPrintf("unmap_anon: invalid vaddr, too high.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     if (vaddr < PROCESS_MMAP_BOT) {
         seL4_DebugPrintf("unmap_anon: invalid vaddr, too low.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     /* Free every page in the range. */
@@ -216,11 +216,11 @@ refosio_munmap_anon(refos_io_mmap_segment_state_t *s, uint32_t vaddr, int npages
     for (int i = 0; i < npages; i++) {
         uint32_t vaddr = PROCESS_MMAP_TOP - ((vaddrOffsetPage + i + 1) * REFOS_PAGE_SIZE);
         int error = refosio_mmap_segment_release(s, vaddr);
-        if (error != ESUCCESS && error != EUNMAPFIRST) {
+        if (error != REFOS_ESUCCESS && error != REFOS_EUNMAPFIRST) {
             /* Best and easiest thing we can do here is just leak memory. */
             seL4_DebugPrintf("refosio_mmap_segment_release failed. Leaked memory.\n");
         }
     }
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }

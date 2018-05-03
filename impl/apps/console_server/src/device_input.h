@@ -64,7 +64,7 @@ int input_read(struct input_state *s, int *dest, uint32_t count);
     @param s The input state structure. (No ownership transfer)
     @param c The client to be blocked. (No ownership transfer)
     @param type The syscall type. Currently must be INPUT_WAITERTYPE_GETC.
-    @return ESUCCESS on success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS on success, refos_err_t otherwise.
 */
 int input_save_caller_as_waiter(struct input_state *s, struct srv_client *c, bool type);
 

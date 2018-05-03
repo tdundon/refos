@@ -50,7 +50,7 @@ test_window_list(void)
     /* Free every second window. */
     for (int i = 1; i < nWindowTest; i+=2) {
         int err = w_delete_window(&wlist, i);
-        test_assert(err == ESUCCESS);
+        test_assert(err == REFOS_ESUCCESS);
     }
 
     /* Make sure every second window is no longer get-able. */
@@ -77,22 +77,22 @@ test_window_associations(void)
 
     struct w_associated_windowlist aw;
     w_associate_init(&aw);
-    
+
     w_associate(&aw, 4, 400, 10);
     w_associate(&aw, 2, 200, 10);
     w_associate(&aw, 3, 300, 10);
     w_associate(&aw, 1, 100, 10);
     w_associate(&aw, 5, 500, 10);
-    
+
 #if REFOS_TEST_VERBOSE_PRINT
     tvprintf("------- Unsorted window list \n");
     w_associate_print(&aw);
-    
+
     tvprintf("------- Sorted window list \n");
     w_associate_find(&aw, (vaddr_t) 0);
     w_associate_print(&aw);
 #endif
-    
+
     /* Associate some windows, and test window conflict checking with icky window
        boundary vaddr cases. */
     int testVaddr[] = {400, 401, 300, 301, 90, 110, 105, 500, 510, 505, 499, 200, 201};
@@ -107,7 +107,7 @@ test_window_associations(void)
         tvprintf("------- winID for vaddr %d: %d\n", testVaddr[i], foundWinID);
         test_assert(foundWinID == expectedWinID[i]);
     }
-    
+
     /* Test w_associate_check with icky window boundary vaddr cases. */
     int testWin[] = {100, 1, 201, 20, 210, 10, 490, 50, 0, 499};
     bool expectedCheckResult[] = {false, false, true, false, false};
@@ -218,7 +218,7 @@ test_ram_dspace_list(void)
     /* Test get-size and resize. */
     test_assert(ram_dspace_get_size(testDS_) == REFOS_PAGE_SIZE);
     int error = ram_dspace_expand(testDS_, REFOS_PAGE_SIZE * 34);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     test_assert(ram_dspace_get_size(testDS_) == REFOS_PAGE_SIZE * 34);
 
     ram_dspace_deinit(&rlist);
@@ -294,7 +294,7 @@ test_ram_dspace_read_write_instance_helper(int testBufSize, int writeSize, int w
     kfree(srcBuf);
 
     ram_dspace_deinit(&rlist);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -308,13 +308,13 @@ test_ram_dspace_read_write(void)
             REFOS_PAGE_SIZE, REFOS_PAGE_SIZE, 0, REFOS_PAGE_SIZE, 0,
             true, 0, 0, REFOS_PAGE_SIZE
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     error = test_ram_dspace_read_write_instance_helper (
             REFOS_PAGE_SIZE, REFOS_PAGE_SIZE, 0, REFOS_PAGE_SIZE, 0,
             false, 0, 0, REFOS_PAGE_SIZE
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* Test read/write with some offsets. */
     error = test_ram_dspace_read_write_instance_helper (
@@ -322,28 +322,28 @@ test_ram_dspace_read_write(void)
             REFOS_PAGE_SIZE / 8, REFOS_PAGE_SIZE / 2, false, 0, REFOS_PAGE_SIZE / 4,
             REFOS_PAGE_SIZE / 8
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     error = test_ram_dspace_read_write_instance_helper (
             REFOS_PAGE_SIZE, REFOS_PAGE_SIZE / 2, REFOS_PAGE_SIZE / 4,
             REFOS_PAGE_SIZE / 8, REFOS_PAGE_SIZE / 2, true, 0, REFOS_PAGE_SIZE / 4,
             REFOS_PAGE_SIZE / 8
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* Test read/write with offsets on big dataspace. */
     error = test_ram_dspace_read_write_instance_helper (
             REFOS_PAGE_SIZE * 3, REFOS_PAGE_SIZE * 2, REFOS_PAGE_SIZE / 2, 578,
             REFOS_PAGE_SIZE + 200, false, 0, (REFOS_PAGE_SIZE / 2) + 200, 578
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     error = test_ram_dspace_read_write_instance_helper (
             REFOS_PAGE_SIZE * 3, REFOS_PAGE_SIZE * 2, REFOS_PAGE_SIZE / 2,
             REFOS_PAGE_SIZE, REFOS_PAGE_SIZE * 2, false, 0, REFOS_PAGE_SIZE + (REFOS_PAGE_SIZE / 2),
             REFOS_PAGE_SIZE / 2
     );
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     return test_success();
 }
@@ -368,15 +368,15 @@ test_ram_dspace_content_init(void)
     test_assert(dspace->magic == RAM_DATASPACE_MAGIC);
 
     int error = ram_dspace_need_content_init(dspace, 0x1000);
-    test_assert(error == -EINVALID);
+    test_assert(error == -REFOS_EINVALID);
 
     /* Enable content init mode, with dummy EP. */
     error = ram_dspace_content_init(dspace, dummyEP, 0x54);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     /* Test content-init bit. */
     error = ram_dspace_need_content_init(dspace, npages * REFOS_PAGE_SIZE + 0x35);
-    test_assert(error == -EINVALIDPARAM);
+    test_assert(error == -REFOS_EINVALIDPARAM);
     for (int i = 0; i < npages; i++) {
         int val = ram_dspace_need_content_init(dspace, i * REFOS_PAGE_SIZE);
         test_assert(val == true);
@@ -387,7 +387,7 @@ test_ram_dspace_content_init(void)
 
     /* Test waiter. */
     error = ram_dspace_add_content_init_waiter(dspace, 0x2000, dummyWaiter);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     ram_dspace_unref(&rlist, dspace->ID);
     ram_dspace_deinit(&rlist);
@@ -401,7 +401,7 @@ int
 test_ringbuffer(void)
 {
     test_start("ring buffer");
-    
+
     struct ram_dspace_list rlist;
     ram_dspace_init(&rlist);
 
@@ -475,16 +475,16 @@ test_ringbuffer(void)
     /* Test rb_read icky wrapping case works, after rb_write. */
     rbw->localStart = rbw->localEnd = 1337;
     rb_write(rbw, buf, REFOS_PAGE_SIZE * 3);
-    
+
     rbr->localStart = rbr->localEnd = 1337;
     rb_read(rbr, outbuf, REFOS_PAGE_SIZE * 3, &bytesRead);
-    
+
     test_assert(bytesRead == REFOS_PAGE_SIZE * 3);
-    
+
     for (int i = 0; i < REFOS_PAGE_SIZE * 3; i++) {
         test_assert(buf[i] == outbuf[i]);
     }
-    
+
     /* Test ring buffer deletion. */
     rb_delete(rb);
     test_assert(ds->ref == 3);

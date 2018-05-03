@@ -55,16 +55,16 @@ typedef struct nsv_mountpoint {
 static inline seL4_CPtr
 nsv_resolve_segment(seL4_CPtr nameserv, char* path, int* resolvedBytes)
 {
-    refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = REFOS_EINVALID;
     int tempResolvedBytes = 0;
 
     seL4_CPtr tcap = nsv_resolve_segment_internal(nameserv, path, &tempResolvedBytes, &errnoRetVal);
-    if (errnoRetVal != ESUCCESS) {
+    if (errnoRetVal != REFOS_ESUCCESS) {
         REFOS_SET_ERRNO(errnoRetVal);
         return 0;
     }
 
-    REFOS_SET_ERRNO(ESUCCESS);
+    REFOS_SET_ERRNO(REFOS_ESUCCESS);
     if (resolvedBytes) {
         (*resolvedBytes) = tempResolvedBytes;
     }
@@ -72,7 +72,7 @@ nsv_resolve_segment(seL4_CPtr nameserv, char* path, int* resolvedBytes)
 }
 
 /*! @brief Resolve a path completely.
-    
+
     This function will completely resolve the given path down to the server that actually
     contains the dataspace. It will search through the namespace hierachy until the leaf node.
 

@@ -221,11 +221,11 @@ test_nameserv_lib(void)
     int error;
 
     error = nameserv_add(&ns, "hello_test", 0x12345);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     error = nameserv_add(&ns, "kitty_test", 0x12345);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
     error = nameserv_add(&ns, "foo_test", 0x12345);
-    test_assert(error == ESUCCESS);
+    test_assert(error == REFOS_ESUCCESS);
 
     int n;
     seL4_CPtr anonCap = 0;

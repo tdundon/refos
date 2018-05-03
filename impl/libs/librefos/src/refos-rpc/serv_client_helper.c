@@ -35,14 +35,14 @@ serv_connect_internal(char *serverPath, bool paramBuffer)
     _svprintf("Connecting to server [%s]...\n", serverPath);
     serv_connection_t sc;
     memset(&sc, 0, sizeof(serv_connection_t));
-    sc.error = EINVALID;
+    sc.error = REFOS_EINVALID;
 
     /* Resolve server path to find the server's anon cap. */
     _svprintf("    Querying nameserv to find anon cap for [%s]....\n", serverPath);
     sc.serverMountPoint = nsv_resolve(serverPath);
-    if (!sc.serverMountPoint.success || ROS_ERRNO() != ESUCCESS) {
+    if (!sc.serverMountPoint.success || ROS_ERRNO() != REFOS_ESUCCESS) {
         _svprintf("    WARNING: Server not found.\n");
-        sc.error = ESERVERNOTFOUND;
+        sc.error = REFOS_ESERVERNOTFOUND;
         goto exit1;
     }
 
@@ -54,7 +54,7 @@ serv_connect_internal(char *serverPath, bool paramBuffer)
         _svprintf("    Known connectionless server detected.\n");
         sc.connectionLess = true;
         sc.serverSession = sc.serverMountPoint.serverAnon;
-        sc.error = ESUCCESS;
+        sc.error = REFOS_ESUCCESS;
         return sc;
     } else {
         /* Make connection request to server using the anon cap. */
@@ -63,7 +63,7 @@ serv_connect_internal(char *serverPath, bool paramBuffer)
         sc.serverSession = serv_connect_direct(sc.serverMountPoint.serverAnon, REFOS_LIVENESS,
                                                &sc.error);
     }
-    if (!sc.serverSession || sc.error != ESUCCESS) {
+    if (!sc.serverSession || sc.error != REFOS_ESUCCESS) {
         _svprintf("    WARNING: Failed to anonymously connect to server.\n");
         goto exit2;
     }
@@ -80,7 +80,7 @@ serv_connect_internal(char *serverPath, bool paramBuffer)
     if (paramBuffer) {
         sc.paramBuffer = data_open_map(REFOS_PROCSERV_EP, "anon", 0, 0,
                                        PROCESS_PARAM_DEFAULTSIZE, -1);
-        if (sc.paramBuffer.err != ESUCCESS) {
+        if (sc.paramBuffer.err != REFOS_ESUCCESS) {
             _svprintf("    WARNING: Failed to create param buffer dspace.\n");
             sc.error = sc.paramBuffer.err;
             goto exit3;
@@ -101,12 +101,12 @@ serv_connect_internal(char *serverPath, bool paramBuffer)
     }
 
     _svprintf("Successfully connected to server [%s]!\n", serverPath);
-    sc.error = ESUCCESS;
+    sc.error = REFOS_ESUCCESS;
     return sc;
 
     /* Exit stack. */
 exit4:
-    assert(sc.paramBuffer.err == ESUCCESS);
+    assert(sc.paramBuffer.err == REFOS_ESUCCESS);
     data_mapping_release(sc.paramBuffer);
 exit3:
     assert(sc.serverSession);
@@ -118,7 +118,7 @@ exit3:
 exit2:
     nsv_mountpoint_release(&sc.serverMountPoint);
 exit1:
-    assert(sc.error != ESUCCESS);
+    assert(sc.error != REFOS_ESUCCESS);
     return sc;
 }
 
@@ -134,15 +134,15 @@ serv_connect_no_pbuffer(char *serverPath)
     return serv_connect_internal(serverPath, false);
 }
 
-void 
+void
 serv_disconnect(serv_connection_t *sc)
 {
-    if (sc == NULL || sc->error != ESUCCESS) {
+    if (sc == NULL || sc->error != REFOS_ESUCCESS) {
         return;
     }
 
     /* Clean up the parameter buffer. */
-    if (sc->paramBuffer.err == ESUCCESS && sc->paramBuffer.vaddr != NULL) {
+    if (sc->paramBuffer.err == REFOS_ESUCCESS && sc->paramBuffer.vaddr != NULL) {
         data_mapping_release(sc->paramBuffer);
     }
 

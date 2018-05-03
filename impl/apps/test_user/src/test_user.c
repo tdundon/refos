@@ -205,7 +205,7 @@ test_threads(void)
     tvprintf("test_threads creating new ep...\n");
     testThreadEP = proc_new_endpoint();
     test_assert(testThreadEP != 0);
-    test_assert(REFOS_GET_ERRNO() == ESUCCESS);
+    test_assert(REFOS_GET_ERRNO() == REFOS_ESUCCESS);
 
     tvprintf("test_threads creating new mutex...\n");
     testThreadMutex = sync_create_mutex();
@@ -215,7 +215,7 @@ test_threads(void)
     for(int i = 0; i < TEST_NUMTHREADS; i++) {
         tvprintf("test_threads cloning thread child %d...\n", i);
         threadID = proc_clone(test_threads_func, &test_clone_stack[i][4096], 0, 0);
-        test_assert(REFOS_GET_ERRNO() == ESUCCESS);
+        test_assert(REFOS_GET_ERRNO() == REFOS_ESUCCESS);
         test_assert(threadID == i + 1);
     }
 

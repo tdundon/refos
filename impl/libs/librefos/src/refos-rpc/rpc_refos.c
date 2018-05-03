@@ -21,7 +21,7 @@
 #include <refos-util/dprintf.h>
 #include <refos-util/cspace.h>
 
-seL4_CPtr rpc_copyout_cptr(seL4_CPtr v) __attribute__((weak)); 
+seL4_CPtr rpc_copyout_cptr(seL4_CPtr v) __attribute__((weak));
 seL4_CPtr
 rpc_copyout_cptr(seL4_CPtr v)
 {
@@ -39,7 +39,7 @@ rpc_copyout_cptr(seL4_CPtr v)
     */
     seL4_CPtr cslot = csalloc();
     if (cslot == 0) {
-        REFOS_SET_ERRNO(ENOMEM);
+        REFOS_SET_ERRNO(REFOS_ENOMEM);
         return (seL4_CPtr) 0;
     }
     int error = seL4_CNode_Move(
@@ -52,7 +52,7 @@ rpc_copyout_cptr(seL4_CPtr v)
     return cslot;
 }
 
-ENDPT rpc_sv_get_reply_endpoint(void *cl) __attribute__((weak)); 
+ENDPT rpc_sv_get_reply_endpoint(void *cl) __attribute__((weak));
 ENDPT
 rpc_sv_get_reply_endpoint(void *cl)
 {
@@ -63,7 +63,7 @@ rpc_sv_get_reply_endpoint(void *cl)
     return c->reply;
 }
 
-bool rpc_sv_skip_reply(void *cl) __attribute__((weak)); 
+bool rpc_sv_skip_reply(void *cl) __attribute__((weak));
 bool
 rpc_sv_skip_reply(void *cl)
 {
@@ -78,7 +78,7 @@ rpc_helper_client_release(void *cl)
     rpc_client_state_t *c = (rpc_client_state_t*) cl;
     if (!c) return;
     assert(c->num_obj == 0);
-    
+
     // Delete the client's reply cap slot.
     if (c->reply) {
         seL4_CNode_Revoke(REFOS_CSPACE, c->reply, REFOS_CSPACE_DEPTH);

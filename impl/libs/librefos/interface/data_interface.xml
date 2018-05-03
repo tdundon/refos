@@ -54,7 +54,7 @@
 
         @param session The client connection session to the dataspace server.  (No ownership)
         @param dspace_fd The dataspace to close.
-        @return ESUCCESS on success, refos_err_t error otherwise.
+        @return REFOS_ESUCCESS on success, refos_err_t error otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -122,7 +122,7 @@
         @param session The client connection session to the dataspace server.  (No ownership)
         @param dspace_fd The dataspace to write to.
         @param c The character value to write.
-        @return ESUCCESS if success, refos_err_t error otherwise.
+        @return REFOS_ESUCCESS if success, refos_err_t error otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -173,7 +173,7 @@
         @param dspace_fd The dataspace to expand.
         @param size The new size to expand dataspace to. Must be larger or equal to the value
                     returned by data_get_size().
-        @return ESUCCESS if success, refos_err_t error otherwise.
+        @return REFOS_ESUCCESS if success, refos_err_t error otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -186,12 +186,12 @@
         Map the contents of the data to the given memory window, so that the contents of the
         dataspace may be read by reading the window. Effectively sets the dataspace server up to be
         the pager. Writing using this method is not implemented yet.
-               
+
         @param session The established session cap to the dataspace server. (No ownership)
         @param dataspace_fd The cap to the dataspace server's opened dataspace.
         @param memoryWindow Cap to the memory window to map the dataspace contents into.
         @param offset The offset in bytes from the beginning of the dataspace.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -204,7 +204,7 @@
 
         @param session The client connection session to the dataspace server. (No ownership)
         @param memoryWindow Capability to window to unmap dataspace from. (No ownership)
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="memoryWindow"/>
@@ -222,7 +222,7 @@
         @param destDataspace Another dataspace to be initialised with content from the srcDataspace.
         @param srcDataspace The dataserver's own dataspace, where the content is.
         @param srcDataspaceOffset The content offset into the source dataspace.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="destDataspace"/>
@@ -235,16 +235,16 @@
 
         The local dataspace server calls another remote dataspace server to have the remote
         dataspace initalised by the contents of the local dataspace.
-        
+
         The local dataspace must book-keep the given dataID. The remote dataspace then will notify
         through the given endpoint asking for content initialisation, the dataID being given in the
         notification.
-               
+
         @param session The established session cap to the remote dataspace server.
         @param dspace_fd The cap to the remote dataspace to be initialised with content.
         @param faultNotifyEP The async endpoint to ask for content initialisation with.
         @param dataID The remote endpoint's unique data ID number, used for notification.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -254,10 +254,10 @@
 
     <function name = "data_unhave_data" return = 'refos_err_t'>
         !@brief Tell dataserver to stop providing content initialise data for its dataspace.
-               
+
         @param session The established session cap to the remote dataspace server.
         @param dspace_fd The cap to the remote dataspace to be initialised with content.
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>
@@ -269,18 +269,18 @@
         Gives the content from the local dataserver to the remote dataserver, in response to the
         remote server's earlier notification asking for content. The content is assumed to be in
         the set up parameter buffer. This call implicitly requires a parameter buffer to be
-        set up, and will return ENOPARAMBUFFER if one has not been set up. 
-        
+        set up, and will return ENOPARAMBUFFER if one has not been set up.
+
         Note that even though the notification from the dataserver asking for content uses dataID to
         identify which dataspace, the reply, for security reasons, gives the actual dataspace cap.
         The dataID may be used securely iff the dataserver implementation supports per-client dataID
         checking, and a version of this method with dataID instead of a cap may be added.
-               
+
         @param session The established session cap to the remote dataspace server.
         @param dspace_fd The cap to the remote dataspace to provide the content for.
         @param offset The offset into the remote dataspace to provide content for.
         @param contentSize The size of the content. (May have maximum content size.)
-        @return ESUCCESS if success, refos_error error code otherwise.
+        @return REFOS_ESUCCESS if success, refos_error error code otherwise.
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
         <param type="seL4_CPtr" name="dspace_fd"/>

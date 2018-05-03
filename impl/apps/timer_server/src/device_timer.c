@@ -60,7 +60,7 @@
     #define TICK_ID DMTIMER3
     #define TIMER_PERIODIC_MAX_SET true
     /* XXX am I doing this right? this is the largest period in nsec you can pass to the timer APIs */
-    #define TIMER_PERIODIC_MAX 178956970666  // ((((1UL << 32) / 24UL) * 1000UL) - 1) 
+    #define TIMER_PERIODIC_MAX 178956970666  // ((((1UL << 32) / 24UL) * 1000UL) - 1)
     #define TICK_TIMER_PERIOD (2000000)
     #define TICK_TIMER_SCALE_NS 1
 
@@ -148,7 +148,7 @@ device_timer_handle_irq(void *cookie, uint32_t irq)
 }
 
 /*! @brief Callback function to handle waiter timer IRQs.
-    
+
     Waiter-list IRQs happen very frequently, as opposed to the GPT overflow IRQs. This is used to
     wake up sleeping clients.
 
@@ -171,7 +171,7 @@ device_timer_init_rtc(struct device_timer_state *s, dev_io_ops_t *io)
     s->cumulativeTime = 0;
 
     #if defined(PLAT_PC99)
-    
+
     rtc_time_date_t rtcTimeDate;
     int error = rtc_get_time_date_reg(&io->opsIO.io_port_ops, 0, &rtcTimeDate);
     if (error) {
@@ -357,13 +357,13 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
 {
     assert(s && s->magic == TIMESERV_DEVICE_TIMER_MAGIC);
     assert(c && c->magic == TIMESERV_CLIENT_MAGIC);
-    int error = EINVALID;
+    int error = REFOS_EINVALID;
 
     /* Allocate and fill out waiter structure. */
     struct device_timer_waiter *waiter = malloc(sizeof(struct device_timer_waiter));
     if (!waiter) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to alloc waiter struct.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     waiter->magic = TIMESERV_DEVICE_TIMER_WAITER_MAGIC;
     waiter->client = c;
@@ -373,7 +373,7 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
     waiter->reply = csalloc();
     if (!waiter->reply) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to alloc cslot.");
-        error = ENOMEM;
+        error = REFOS_ENOMEM;
         goto exit1;
     }
 
@@ -381,14 +381,14 @@ device_timer_save_caller_as_waiter(struct device_timer_state *s, struct srv_clie
     error = seL4_CNode_SaveCaller(REFOS_CSPACE, waiter->reply, REFOS_CDEPTH);
     if (error != seL4_NoError) {
         ROS_ERROR("device_timer_save_caller_as_waiter failed to save caller.");
-        error = EINVALID;
+        error = REFOS_EINVALID;
         goto exit2;
     }
 
     /* Add to waiter list. (Takes ownership) */
     cvector_add(&s->waiterList, (cvector_item_t) waiter);
 
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 
     /* Exit stack. */
 exit2:

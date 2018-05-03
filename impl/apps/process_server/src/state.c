@@ -234,18 +234,18 @@ procserv_frame_write(seL4_CPtr frame, const char* src, size_t len, size_t offset
 {
     if (offset + len > REFOS_PAGE_SIZE) {
         ROS_ERROR("procserv_frame_write invalid offset and length.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
     char* addr = (char*) vspace_map_pages(&procServ.vspace, &frame, NULL, seL4_AllRights, 1,
                                           seL4_PageBits, true);
     if (!addr) {
         ROS_ERROR ("procserv_frame_write couldn't map frame.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     memcpy((void*)(addr + offset), (void*) src, len);
     procserv_flush(&frame, 1);
     vspace_unmap_pages(&procServ.vspace, addr, 1, seL4_PageBits, VSPACE_PRESERVE);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -253,19 +253,19 @@ procserv_frame_read(seL4_CPtr frame, const char* dst, size_t len, size_t offset)
 {
     if (offset + len > REFOS_PAGE_SIZE) {
         ROS_ERROR("procserv_frame_read invalid offset and length.");
-        return EINVALIDPARAM;
+        return REFOS_EINVALIDPARAM;
     }
 
     char* addr = (char*) vspace_map_pages(&procServ.vspace, &frame, NULL, seL4_AllRights, 1,
                                           seL4_PageBits, true);
     if (!addr) {
         ROS_ERROR ("procserv_frame_read couldn't map frame.");
-        return ENOMEM;
+        return REFOS_ENOMEM;
     }
     procserv_flush(&frame, 1);
     memcpy((void*) dst, (void*)(addr + offset), len);
     vspace_unmap_pages(&procServ.vspace, addr, 1, seL4_PageBits, VSPACE_PRESERVE);
-    return ESUCCESS;
+    return REFOS_ESUCCESS;
 }
 
 /*! @brief The free EP cap callback function, used by the nameserv implementation helper library.

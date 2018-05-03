@@ -44,7 +44,7 @@
     IRQ then channel conflict occurs and we reuse an allocated channel, resulting in both IRQ
     handlers getting called, spurious IRQs. This is a limitation of a single endpoint IRQ reciever
     design.
-    
+
     IRQ badges:
                         ◀――― lower bits               higher bits ―――▶
                         0    0 1 0 0 0 0 1 1 0 0 0 0 0 1 0 1 0 0     1
@@ -101,7 +101,7 @@ void dev_irq_init(dev_irq_state_t *irqState, dev_irq_config_t config);
     @param irq The IRQ number to set callback for.
     @param callback The callback function to set.
     @param cookie The cookie that will be passed onto the callback function.
-    @return ESUCCESS if success, refos_err_t otherwise.
+    @return REFOS_ESUCCESS if success, refos_err_t otherwise.
 */
 int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
                    dev_irq_callback_fn_t callback, void *cookie);

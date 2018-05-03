@@ -37,7 +37,7 @@ rb_update_local_start(struct rb_buffer *buf)
         );
     }
     assert(!"Invalid ring buffer mode!");
-    return EINVALID;
+    return REFOS_EINVALID;
 }
 
 static int
@@ -56,7 +56,7 @@ rb_update_local_end(struct rb_buffer *buf)
         );
     }
     assert(!"Invalid ring buffer mode!");
-    return EINVALID;
+    return REFOS_EINVALID;
 }
 
 static uint32_t
@@ -112,23 +112,23 @@ rb_write(struct rb_buffer *buf, char *str, size_t len)
 
     if (buf->mode != RB_WRITEONLY) {
         ROS_WARNING("tried to write to a read-only ring buffer.\n");
-        return EACCESSDENIED;
+        return REFOS_EACCESSDENIED;
     }
-    
+
     if (len > rb_remaining_size(buf)) {
         /* We have run out of space according to our local copy of start,
            and our local copy may be out of date, so we update it and try again. */
         error = rb_update_local_start(buf);
         if (error) {
             ROS_ERROR("could not read start value from shared buffer.\n");
-            return EINVALID;
+            return REFOS_EINVALID;
         }
         if (len > rb_remaining_size(buf)) {
             /* We have just updated our local start, so data is definitely too big. */
-            return ENOMEM;
+            return REFOS_ENOMEM;
         }
     }
-    
+
     if (buf->localEnd < buf->localStart) {
         /* Non-wrapping case, copy block of data straight in.
 
@@ -145,10 +145,10 @@ rb_write(struct rb_buffer *buf, char *str, size_t len)
         /* Wrapping case - copy the end bit first.
 
             | ✕ ✕ _ _ _ _ _ _ _ _ _ _ _ _ _ █ █ █ █ █ █ █ █ █ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹|
-                                            ◀―――― Filled ―――▶ ◀――― End bit ―――――▶ 
+                                            ◀―――― Filled ―――▶ ◀――― End bit ―――――▶
         */
         uint32_t endBytes = MIN(len, buf->size - buf->localEnd);
-        error = ram_dspace_write(str, endBytes, buf->dataspace, 
+        error = ram_dspace_write(str, endBytes, buf->dataspace,
                                       buf->localEnd + RINGBUFFER_METADATA_SIZE);
         if (error) {
             ROS_ERROR("could not write to dataspace.\n");
@@ -159,10 +159,10 @@ rb_write(struct rb_buffer *buf, char *str, size_t len)
         /* Copy the wrapped start bit if it exists.
 
             | ✕ ✕ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ _ _ _ _ █ █ █ █ █ █ █ █ █ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹|
-                  ◀―― Start bit ――▶         ◀―――― Filled ―――▶ 
+                  ◀―― Start bit ――▶         ◀―――― Filled ―――▶
         */
         if (endBytes < len) {
-            error = ram_dspace_write(str + endBytes, len - endBytes, buf->dataspace, 
+            error = ram_dspace_write(str + endBytes, len - endBytes, buf->dataspace,
                                           0 + RINGBUFFER_METADATA_SIZE);
             if (error) {
                 ROS_ERROR("could not write to dataspace.\n");
@@ -170,7 +170,7 @@ rb_write(struct rb_buffer *buf, char *str, size_t len)
             }
         }
     }
-    
+
     /* Update end. */
     buf->localEnd = (buf->localEnd + len) % buf->size;
     error = rb_update_local_end(buf);
@@ -178,8 +178,8 @@ rb_write(struct rb_buffer *buf, char *str, size_t len)
         ROS_ERROR("could not write end value to shared buffer.\n");
         return error;
     }
-    
-    return ESUCCESS;
+
+    return REFOS_ESUCCESS;
 }
 
 int
@@ -187,12 +187,12 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
 {
     int error;
     assert(buf && buf->magic == RINGBUFFER_MAGIC);
-    
+
     if (buf->mode != RB_READONLY) {
         ROS_WARNING("tried to read from a write-only ring buffer.\n");
-        return EACCESSDENIED;
+        return REFOS_EACCESSDENIED;
     }
-    
+
     size_t contentSize = (buf->size - 1) - rb_remaining_size(buf);
     if (len > contentSize) {
         /* We don't have enough data to read according to our local copy of end,
@@ -203,7 +203,7 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
             return error;
         }
     }
-    
+
     if (buf->localStart <= buf->localEnd) {
         /* Non-wrapping case, copy block of data straight out.
 
@@ -221,7 +221,7 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
         /* Wrapping case - read the end bit out first.
 
             | ✕ ✕ _ _ _ _ _ _ _ _ _ _ _ _ _ █ █ █ █ █ █ █ █ █ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹|
-                                            ◀―――― Filled ―――▶ ◀――― End bit ―――――▶ 
+                                            ◀―――― Filled ―――▶ ◀――― End bit ―――――▶
         */
         *bytesRead = MIN(buf->size - buf->localStart, len);
         error = ram_dspace_read(dest, *bytesRead, buf->dataspace,
@@ -232,10 +232,10 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
         }
         unsigned int bytesRemain = MIN(len - *bytesRead, buf->localEnd);
 
-        /* Read the wrapped start bit if it exists. 
+        /* Read the wrapped start bit if it exists.
 
             | ✕ ✕ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ _ _ _ _ █ █ █ █ █ █ █ █ █ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹ ▹|
-                  ◀―― Start bit ――▶         ◀―――― Filled ―――▶ 
+                  ◀―― Start bit ――▶         ◀―――― Filled ―――▶
         */
         if (bytesRemain > 0) {
             error = ram_dspace_read(dest + *bytesRead, bytesRemain, buf->dataspace,
@@ -247,7 +247,7 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
             *bytesRead += bytesRemain;
         }
     }
-    
+
     /* Update start. */
     buf->localEnd = (buf->localEnd + len) % buf->size;
     buf->localStart = (buf->localStart + *bytesRead) % buf->size;
@@ -256,6 +256,6 @@ rb_read(struct rb_buffer *buf, char *dest, size_t len, size_t *bytesRead)
         ROS_ERROR("could not write start value to shared buffer.\n");
         return error;
     }
-    
-    return ESUCCESS;
+
+    return REFOS_ESUCCESS;
 }
