@@ -76,7 +76,7 @@ dspace_oat_create(coat_t *oat, int id, uint32_t arg[COAT_ARGS])
     int error = seL4_CNode_Mint(
             REFOS_CSPACE, ndspace->dataspaceCap, REFOS_CDEPTH,
             REFOS_CSPACE, fileServCommon->anonEP, REFOS_CDEPTH,
-            seL4_AllRights, seL4_CapData_Badge_new(id + FS_DSPACE_BADGE_BASE)
+            seL4_AllRights, (id + FS_DSPACE_BADGE_BASE)
     );
     assert(!error);
     (void) error;

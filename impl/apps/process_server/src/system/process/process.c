@@ -135,22 +135,22 @@ proc_setup_environment(struct proc_pcb *p, char *param)
     proc_pass_badge (
             p, REFOS_PROCSERV_EP, procServ.endpoint.cptr,
             seL4_NoRead,
-            seL4_CapData_Badge_new(pid_get_badge(p->pid))
+            pid_get_badge(p->pid)
     );
 
     /* Tell the process about its own liveness cap. */
     proc_pass_badge (
             p, REFOS_LIVENESS, procServ.endpoint.cptr,
             seL4_NoRead,
-            seL4_CapData_Badge_new(pid_get_liveness_badge(p->pid))
+            pid_get_liveness_badge(p->pid)
     );
 
     /* Tell the process about its initial thread. */
     struct proc_tcb *t0 = proc_get_thread(p, 0);
     assert(t0);
     proc_pass_badge (
-            p, REFOS_THREAD_TCB, thread_tcb_obj(t0), seL4_AllRights, 
-            seL4_CapData_Badge_new(0)
+            p, REFOS_THREAD_TCB, thread_tcb_obj(t0), seL4_AllRights,
+            0
     );
 
     #if defined(PLAT_PC99)
@@ -500,7 +500,7 @@ proc_dspace_delete_callback(struct proc_pcb *p, void *cookie)
             p->notificationBuffer = NULL;
         }
     }
-    
+
 }
 
 struct proc_tcb *

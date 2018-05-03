@@ -182,8 +182,7 @@ test_proc_client_watch(void)
         vka_cspace_make_path(&procServ.vka, dummyEP[i].cptr, &srcPath);
         error = vka_cspace_alloc_path(&procServ.vka, &dummyEPMinted[i]);
         test_assert(!error);
-        error = vka_cnode_mint(&dummyEPMinted[i], &srcPath, seL4_AllRights,
-                               seL4_CapData_Badge_new(123));
+        error = vka_cnode_mint(&dummyEPMinted[i], &srcPath, seL4_AllRights, 123);
         test_assert(!error);
     }
 

@@ -203,7 +203,7 @@ uint32_t
 rpc_pop_uint()
 {
     return seL4_GetMR(_rpc_mr++);
-}  
+}
 
 void
 rpc_pop_str(char* v)
@@ -318,12 +318,13 @@ ENDPT
 rpc_sv_pop_cptr(void *cl)
 {
     rpc_client_state_t* c = (rpc_client_state_t*)cl;
-    if (_rpc_cp >= seL4_MessageInfo_get_extraCaps(c->minfo)) { 
+    if (_rpc_cp >= seL4_MessageInfo_get_extraCaps(c->minfo)) {
         return 0;
     }
     seL4_Word unw = seL4_MessageInfo_get_capsUnwrapped(c->minfo);
     if (unw & (1 << _rpc_cp)) {
-        return seL4_CapData_Badge_get_Badge(seL4_GetBadge(_rpc_cp++));
+        seL4_Word bdg = seL4_GetBadge(_rpc_cp++);
+        return(bdg & 0x0FFFFFFFul);
     }
     _rpc_cp++;
     assert(_rpc_recv_cslot);

@@ -51,7 +51,7 @@ client_oat_create(coat_t *oat, int id, uint32_t arg[COAT_ARGS])
             REFOS_CSPACE, nclient->session, REFOS_CDEPTH,
             REFOS_CSPACE, ct->sessionSrcEP, REFOS_CDEPTH,
             seL4_NoRead,
-            seL4_CapData_Badge_new(nclient->cID + ct->badgeBase)
+            (nclient->cID + ct->badgeBase)
     );
     if (error != seL4_NoError) {
         printf("ERROR: failed to mint client session cap.\n");

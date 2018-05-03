@@ -96,7 +96,7 @@ srv_ctable_set_param_buffer_handler(srv_common_t *srv, struct srv_client *c,
         c->paramBufferSize = 0;
         return REFOS_ESUCCESS;
     }
- 
+
     /* Sanity check parameters. */
     if (!srv_check_dispatch_caps(m, 0x00000000, 1)) {
         return REFOS_EINVALIDPARAM;
@@ -250,7 +250,7 @@ srv_mint(int badge, seL4_CPtr ep)
         REFOS_CSPACE, mintEP, REFOS_CDEPTH,
         REFOS_CSPACE, ep, REFOS_CDEPTH,
         seL4_NoRead,
-        seL4_CapData_Badge_new(badge)
+        badge
     );
     if (error != seL4_NoError) {
         ROS_ERROR("Could not mint badge.");
@@ -277,7 +277,7 @@ srv_dispatch_notification(srv_common_t *srv, srv_common_notify_handler_callbacks
     assert(srv && srv->magic == SRV_MAGIC);
 
     /* Allocate a notification structure. */
-    struct proc_notification *notification = malloc(sizeof(struct proc_notification)); 
+    struct proc_notification *notification = malloc(sizeof(struct proc_notification));
     if (!notification) {
         dprintf("Out of memory while creating notification struct.\n");
         return DISPATCH_ERROR;

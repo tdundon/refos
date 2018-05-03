@@ -83,7 +83,7 @@ initialise_allocator(seL4_BootInfo *info, struct procserv_state *s)
     void *vaddr;
     virtual_reservation = vspace_reserve_range(&s->vspace,
                                                ALLOCATOR_VIRTUAL_POOL_SIZE, seL4_AllRights, 1, &vaddr);
-    
+
     if (virtual_reservation.res == 0) {
         ZF_LOGF("Failed to provide virtual memory for allocator");
     }
@@ -218,7 +218,7 @@ procserv_mint_badge(int badge)
     vka_cspace_make_path(&procServ.vka, procServ.endpoint.cptr, &pathSrc);
     error = vka_cnode_mint(
             &path, &pathSrc, seL4_NoRead,
-            seL4_CapData_Badge_new(badge)
+            badge
     );
     if (error) {
         ROS_WARNING("procserv_mint_badge could not mint endpoint cap.");
