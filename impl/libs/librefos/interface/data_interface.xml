@@ -35,7 +35,7 @@
         @param flags The read / write / create flags.
         @param mode The mode to create new file with, in the case that a new one is created.
         @param size The size of dataspace to open. Note that some data servers may ignore this.
-        @param errno Output errno variable, in the case that an error occurs. (No ownership)
+        @param errval Output errval variable, in the case that an error occurs. (No ownership)
         @return Capability to the new dataspace. (Transfers ownership)
 
         <param type="seL4_CPtr" name="session" mode="connect_ep"/>
@@ -43,7 +43,7 @@
         <param type="int" name="flags"/>
         <param type="int" name="mode"/>
         <param type="int" name="size"/>
-        <param type="int*" name="errno" dir='out'/>
+        <param type="int*" name="errval" dir='out'/>
     </function>
 
     <function name="data_close" return='refos_err_t'>

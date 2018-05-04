@@ -26,10 +26,10 @@
         The client's vspace owns the created endpoint, and the EP will be deleted when the client
         exits.
 
-        @param errno Variable to store error code in.
+        @param errval Variable to store error code in.
         @return Recieved cap if success, 0 otherwise.
 
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
     <function name="proc_new_async_endpoint_internal" return='seL4_CPtr'>
@@ -38,10 +38,10 @@
         The client's vspace owns the created endpoint, and the EP will be deleted when the client
         exits.
 
-        @param errno Variable to store error code in.
+        @param errval Variable to store error code in.
         @return Recieved cap if success, 0 otherwise.
 
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
     <function name="proc_watch_client" return='refos_err_t'>
@@ -70,21 +70,21 @@
 
         Likely to have implementation and/or technical restrictions regarding window base addrs and
         mapped dataspaces. For the details, looking at the documentation for the implementation is
-        strongly recommended. On error, 0 is returned and errno is set.
+        strongly recommended. On error, 0 is returned and errval is set.
 
         @param vaddr The window base address in the calling client's VSpace.
         @param size The size of the mem window.
         @param permissions The read / write permission bitmask.
         @param permissions The flags bitmask (cached / uncached).
-        @param errno The returned error number, if any errors.
-        @return Capability to created window if success, 0 otherwise (errno will be set).
+        @param errval The returned error number, if any errors.
+        @return Capability to created window if success, 0 otherwise (errval will be set).
                 (Gives ownership)
 
         <param type="uint32_t" name="vaddr"/>
         <param type="uint32_t" name="size"/>
         <param type="uint32_t" name="permissions"/>
         <param type="uint32_t" name="flags"/>
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
     <function name="proc_resize_mem_window" return='refos_err_t'>
@@ -123,12 +123,12 @@
         avoid some complex double-book-keeping scenarios.
 
         @param window The window to get mapped dataspace for. (No ownership)
-        @param errno The returned error number, if any errors.
+        @param errval The returned error number, if any errors.
         @return 0 if error or no dataspace mapped, capability to the mapped dataspace at the given
                 window otherwise. (Gives ownership)
 
         <param type="seL4_CPtr" name="window"/>
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
     <function name="proc_register_as_pager" return='refos_err_t'>
@@ -250,14 +250,14 @@
         @param childStack The stack vaddr of the new thread.
         @param flags Unused, must be 0.
         @param arg Unused, must be 0.
-        @param errno The resulting refos_error error code, if an error occured.
+        @param errval The resulting refos_error error code, if an error occured.
         @return threadID if success, negative if error occured.
 
         <param type="seL4_Word" name="entryPoint"/>
         <param type="seL4_Word" name="childStack"/>
         <param type="int" name="flags"/>
         <param type="seL4_Word" name="arg"/>
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
     <function name="proc_nice" return='refos_err_t'>

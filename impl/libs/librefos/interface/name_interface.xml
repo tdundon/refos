@@ -63,13 +63,13 @@
         @param nameserv The name server to resolve with.
         @param path The path to resolve.
         @param[out] resolvedBytes Output containing number of bytes resolved.
-        @param errno Outut error code, if an error occured.
+        @param errval Outut error code, if an error occured.
         @return 0 on error, anon capability to next name server on success.
 
         <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
         <param type="char*" name="path"/>
         <param type="int*" name="resolvedBytes" dir="out"/>
-        <param type="refos_err_t*" name="errno" dir="out"/>
+        <param type="refos_err_t*" name="errval" dir="out"/>
     </function>
 
 </interface>

@@ -25,7 +25,7 @@
 
         <param type="seL4_CPtr" name="serv" mode="connect_ep"/>
         <param type="seL4_CPtr" name="liveness"/>
-        <param type="int*" name="errno" dir='out'/>
+        <param type="int*" name="errval" dir='out'/>
     </function>
 
     <function name="serv_ping" return='refos_err_t'>
