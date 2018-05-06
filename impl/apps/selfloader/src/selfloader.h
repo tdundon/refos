@@ -49,22 +49,6 @@
 
 #define AT_SYSINFO 32
 
-/*! @brief Structure to store 32-bit aux */
-typedef struct {
-  uint32_t a_type;
-  union {
-      uint32_t a_val;
-  } a_un;
-} Elf32_auxv_t;
-
-/*! @brief Structure to store 64-bit aux */
-typedef struct {
-    uint64_t a_type;
-    union {
-        uint64_t a_val;
-    } a_un;
-} Elf64_auxv_t;
-
 /*! @brief Self-loader application elf file segment information
 
     It stores segment and file information of each segment to initiate dataspace and window
