@@ -202,6 +202,7 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
     assert(s && io);
     assert(!s->initialised);
     size_t irqCnt = 0;
+    int error;
 
     s->magic = TIMESERV_DEVICE_TIMER_MAGIC;
     s->io = io;
@@ -220,9 +221,11 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
     }
 
     /* Set up to receive device timer IRQs. */
-    for (uint32_t i = 0; i < irqCnt; i++) {
-        int irq = timer_get_nth_irq(s->timerDev, i);
-        int error = dev_handle_irq(&timeServ.irqState, irq, device_timer_handle_irq, (void*) s);
+    for (uint32_t i = 0; i < irqCnt; i++)
+    {
+        ps_irq_t irq;
+        error = s->timerDev->get_nth_irq(s->timerDev->data, i, &irq);
+        error = dev_handle_irq(&timeServ.irqState, i, device_timer_handle_irq, (void*) s);
         assert(!error);
         (void) error;
     }
@@ -230,36 +233,24 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
     /* Set up to recieve tick timer IRQs. */
     if ((s->tickDev != NULL) && (s->tickDev != s->timerDev))
     {
-        for (uint32_t i = 0; i < irqCnt; i++) {
-            int irq = timer_get_nth_irq(s->tickDev, i);
-            int error = dev_handle_irq(&timeServ.irqState, irq, device_tick_handle_irq, (void*) s);
+        for (uint32_t i = 0; i < irqCnt; i++)
+        {
+            ps_irq_t irq;
+            error = s->tickDev->get_nth_irq(s->tickDev->data, i, &irq);
+            error = dev_handle_irq(&timeServ.irqState, i, device_tick_handle_irq, (void*) s);
             assert(!error);
             (void) error;
-        }
-
-        int error = timer_start(s->tickDev);
-        if (error) {
-            ROS_ERROR("Could not start tick timer.");
-            assert(!"Tick timer initialise but could not start.");
-            return;
         }
     }
 
     /* Read the RTC. */
     device_timer_init_rtc(s, io);
 
-    /* Start the timer. */
-    int error = timer_start(s->timerDev);
-    if (error) {
-        ROS_ERROR("Could not start timer.");
-        assert(!"Timer initialise but could not start.");
-        return;
-    }
-
     #if TIMER_PERIODIC_MAX_SET
     /* Set the timer for periodic overflow interrupts. */
     error = s->timerDev->set_timeout(s->timerDev->data, TIMER_PERIODIC_MAX, TIMEOUT_PERIODIC);
-    if (error) {
+    if (error)
+    {
         ROS_ERROR("Could not configure periodic timer.");
         assert(!"Could not set periodic timer.");
         return;
