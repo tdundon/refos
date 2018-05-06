@@ -210,7 +210,7 @@ data_init_data_handler(void *rpc_userptr , seL4_CPtr rpc_destDataspace , seL4_CP
                        uint32_t rpc_srcDataspaceOffset)
 {
     assert(!"data_init_data_handler unimplemented.");
-    return REFOS_REFOS_EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t
@@ -218,7 +218,7 @@ data_have_data_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr r
                        uint32_t* rpc_dataID)
 {
     assert(!"data_have_data_handler unimplemented.");
-    return REFOS_REFOS_EUNIMPLEMENTED;
+    return REFOS_EUNIMPLEMENTED;
 }
 
 refos_err_t

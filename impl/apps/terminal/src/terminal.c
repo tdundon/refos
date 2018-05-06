@@ -101,7 +101,7 @@ terminal_exec(void)
     snprintf(tempBuffer, 1024, "%s%s", getenv("PWD"), args[1]);
     proc_new_proc(tempBuffer, "", true, 71, &status);
 
-    if (status == EFILENOTFOUND) {
+    if (status == REFOS_EFILENOTFOUND) {
         printf("-terminal: %s: application not found\n", args[1]);
     }
 }
