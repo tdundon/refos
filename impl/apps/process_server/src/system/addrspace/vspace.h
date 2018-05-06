@@ -59,7 +59,7 @@ struct vs_vspace {
     seL4_CPtr cspaceUnguarded;
     cspacepath_t cspace;
     uint32_t cspaceSize;
-    seL4_CapData_t cspaceGuardData;
+    seL4_Word cspaceGuardData;
 
     /*! List of objects allocated for book keeping. Should free all this when
         this vspace is deleted. Contains list of vka_object_t*s. */

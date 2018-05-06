@@ -289,7 +289,8 @@ data_datamap_handler(void *rpc_userptr , seL4_CPtr rpc_dspace_fd , seL4_CPtr rpc
     }
 
     /* Retrieve and validate dataspace badge. */
-    seL4_Word dataspaceBadge = seL4_CapData_Badge_get_Badge(seL4_GetBadge(0));
+    seL4_Word bdg = seL4_GetBadge(0);
+    seL4_Word dataspaceBadge = (bdg & 0xffffffful);
     assert(dataspaceBadge == rpc_dspace_fd);
     struct fs_dataspace* dspace = dspace_get_badge(&fileServ.dspaceTable, dataspaceBadge);
     if (!dspace) {

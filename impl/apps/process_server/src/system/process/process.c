@@ -88,7 +88,7 @@ exit0:
 
 static void
 proc_pass_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapRights_t rights,
-                seL4_CapData_t badge)
+                seL4_Word badge)
 {
     cspacepath_t pathSrc, pathDest;
     vka_cspace_make_path(&procServ.vka, ep, &pathSrc);
@@ -354,7 +354,7 @@ proc_nice(struct proc_pcb *p, int tindex, int priority)
         return REFOS_EINVALIDPARAM;
     }
     assert(thread_tcb_obj(t));
-    int error = seL4_TCB_SetPriority(thread_tcb_obj(t), priority);
+    int error = seL4_TCB_SetPriority(thread_tcb_obj(t), thread_tcb_obj(t), priority);
     if (error) {
         ROS_ERROR("proc_nice failed to set TCB priority.");
         return REFOS_EINVALID;
