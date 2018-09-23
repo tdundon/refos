@@ -127,6 +127,7 @@ static void
 proc_setup_environment(struct proc_pcb *p, char *param)
 {
     assert(p);
+    dprintf("Setting environment ...\n");
 
     /* Pass the process its static parameter contents. */
     proc_staticparam_create_and_set(p, param);
@@ -160,6 +161,7 @@ proc_setup_environment(struct proc_pcb *p, char *param)
             p, REFOS_DEVICE_IO_PORTS, seL4_CapIOPort, seL4_AllRights
         );
     }
+    dprintf("Exiting environment setup ...\n");
     #else
     (void) proc_copy_badge;
     #endif
@@ -291,7 +293,7 @@ exit0:
 int
 proc_start_thread(struct proc_pcb *p, int tindex, void* arg0, void* arg1)
 {
-    dvprintf("Starting PID %d thread %d!!!\n", p->pid, tindex);
+    dprintf("Starting PID %d thread %d!!!\n", p->pid, tindex);
     assert(cvector_count(&p->threads) >= 1);
     struct proc_tcb *t = (struct proc_tcb *) cvector_get(&p->threads, tindex);
     assert(t);
@@ -304,7 +306,7 @@ proc_load_direct(char *name, int priority, char *param, unsigned int parentPID,
                  uint32_t systemCapabilitiesMask)
 {
     /* Allocate a PID. */
-    dprintf("Allocating PID and PCB...\n");
+    dprintf("Allocating PID and PCB for process %s ...\n", name);
     uint32_t npid = pid_alloc(&procServ.PIDList);
     if (npid == PID_NULL) {
         dprintf("Failed PID allocation.\n");

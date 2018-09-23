@@ -101,7 +101,7 @@ simulate-kzm:
 
 simulate-ia32:
 	qemu-system-i386 \
-		-m 512 -nographic -kernel images/kernel-ia32-pc99 \
+		-m 512 -nographic -S -gdb tcp::9000 -kernel images/kernel-ia32-pc99 \
 		-initrd images/refos-image
 
 simulate-ia32-graphics:

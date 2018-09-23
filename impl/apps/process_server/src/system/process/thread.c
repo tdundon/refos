@@ -69,11 +69,13 @@ thread_start(struct proc_tcb *thread, void *arg0, void *arg1)
        entirely.
     */
     /* Start the thread using seL4_TCB_Resume() */
+    dprintf("Starting thread 0x%0X\n", thread);
     int error = seL4_TCB_Resume(thread->sel4utilsThread.tcb.cptr);
     if (error) {
         ROS_ERROR("sel4utils_start_thread failed. error: %d.", error);
         return REFOS_EINVALID;
     }
+    dprintf("Thread 0x%0X started\n", thread);
 
     return REFOS_ESUCCESS;
 }

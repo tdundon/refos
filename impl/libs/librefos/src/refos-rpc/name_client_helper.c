@@ -77,7 +77,9 @@ nsv_resolve(char* path)
         /* Check if path has already been resolved. */
         bool resolved = nsv_check_path_resolved(cpath);
         if (!resolved) {
+            ROS_WARNING("nsv_check_path_resolved() returned FALSE.");
             nextNameServer = nsv_resolve_segment(nameServer, cpath, &resolvedBytes);
+            ROS_WARNING("nsv_resolve_segment() returned %s. resolvedBytes = %d.", (nextNameServer ? nextNameServer : "NULL"), resolvedBytes);
         }
 
         /* Have we reached the leaf of the path? */
